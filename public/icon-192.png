@@ -1,0 +1,21 @@
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="96" cy="96" r="90" fill="#3B82F6"/>
+  
+  <!-- Simplified sharing symbol -->
+  <g transform="translate(48, 48)">
+    <!-- Left hand -->
+    <path d="M24 36 C24 30, 30 24, 36 30 C42 36, 42 48, 36 54 C30 60, 24 54, 18 48 C12 42, 18 36, 24 30 C30 24, 36 30, 42 36" 
+          fill="#FFFFFF"/>
+    
+    <!-- Right hand -->
+    <path d="M48 30 C54 24, 60 30, 60 36 C60 42, 54 48, 48 48 C42 48, 36 42, 36 36 C36 30, 42 24, 48 30" 
+          fill="#FFFFFF"/>
+    
+    <!-- Exchange arrow -->
+    <path d="M36 36 L48 36 M42 30 L48 36 L42 42" 
+          stroke="#F59E0B" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
+
+

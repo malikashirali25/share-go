@@ -1,0 +1,423 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Modern Dark Theme for Share & Go */
+
+/* Base dark theme colors */
+:root {
+  --dark-bg-primary: #0f172a;      /* slate-900 */
+  --dark-bg-secondary: #1e293b;    /* slate-800 */
+  --dark-bg-tertiary: #334155;     /* slate-700 */
+  --dark-text-primary: #f8fafc;    /* slate-50 */
+  --dark-text-secondary: #e2e8f0;  /* slate-200 */
+  --dark-text-muted: #94a3b8;      /* slate-400 */
+  --dark-border: #475569;           /* slate-600 */
+  --dark-accent: #3b82f6;           /* blue-500 */
+  --dark-accent-hover: #2563eb;     /* blue-600 */
+  
+  /* Shadcn/ui color variables */
+  --primary: 221.2 83.2% 53.3%;     /* blue-600 */
+  --primary-foreground: 210 40% 98%; /* white */
+  --secondary: 210 40% 96%;          /* gray-100 */
+  --secondary-foreground: 222.2 84% 4.9%; /* gray-900 */
+  --background: 0 0% 100%;           /* white */
+  --foreground: 222.2 84% 4.9%;     /* gray-900 */
+  --border: 214.3 31.8% 91.4%;      /* gray-200 */
+  --input: 214.3 31.8% 91.4%;       /* gray-200 */
+  --ring: 221.2 83.2% 53.3%;        /* blue-600 */
+  --muted: 210 40% 96%;             /* gray-100 */
+  --muted-foreground: 215.4 16.3% 46.9%; /* gray-500 */
+  --accent: 210 40% 96%;            /* gray-100 */
+  --accent-foreground: 222.2 84% 4.9%; /* gray-900 */
+  --destructive: 0 84.2% 60.2%;     /* red-500 */
+  --destructive-foreground: 210 40% 98%; /* white */
+  --card: 0 0% 100%;                /* white */
+  --card-foreground: 222.2 84% 4.9%; /* gray-900 */
+  --popover: 0 0% 100%;             /* white */
+  --popover-foreground: 222.2 84% 4.9%; /* gray-900 */
+  --radius: 0.5rem;
+}
+
+/* Background colors */
+.dark {
+  background-color: var(--dark-bg-primary);
+  color: var(--dark-text-primary);
+  
+  /* Dark mode color overrides */
+  --primary: 221.2 83.2% 53.3%;     /* blue-600 */
+  --primary-foreground: 210 40% 98%; /* white */
+  --secondary: 217.2 32.6% 17.5%;   /* slate-800 */
+  --secondary-foreground: 210 40% 98%; /* white */
+  --background: 222.2 84% 4.9%;     /* gray-900 */
+  --foreground: 210 40% 98%;        /* white */
+  --border: 217.2 32.6% 17.5%;      /* slate-800 */
+  --input: 217.2 32.6% 17.5%;       /* slate-800 */
+  --ring: 221.2 83.2% 53.3%;        /* blue-600 */
+  --muted: 217.2 32.6% 17.5%;       /* slate-800 */
+  --muted-foreground: 215.4 16.3% 46.9%; /* gray-500 */
+  --accent: 217.2 32.6% 17.5%;      /* slate-800 */
+  --accent-foreground: 210 40% 98%; /* white */
+  --card: 222.2 84% 4.9%;           /* gray-900 */
+  --card-foreground: 210 40% 98%;   /* white */
+  --popover: 222.2 84% 4.9%;        /* gray-900 */
+  --popover-foreground: 210 40% 98%; /* white */
+}
+
+.dark .bg-white {
+  background-color: var(--dark-bg-secondary) !important;
+  border: 1px solid var(--dark-border);
+}
+
+.dark .bg-gray-50 {
+  background-color: var(--dark-bg-secondary) !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: var(--dark-bg-tertiary) !important;
+}
+
+.dark .bg-gray-200 {
+  background-color: var(--dark-bg-tertiary) !important;
+}
+
+/* Text colors - High contrast for readability */
+.dark .text-gray-900 {
+  color: var(--dark-text-primary) !important;
+}
+
+.dark .text-gray-800 {
+  color: var(--dark-text-primary) !important;
+}
+
+.dark .text-gray-700 {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark .text-gray-600 {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark .text-gray-500 {
+  color: var(--dark-text-muted) !important;
+}
+
+.dark .text-gray-400 {
+  color: var(--dark-text-muted) !important;
+}
+
+.dark .text-gray-300 {
+  color: var(--dark-text-muted) !important;
+}
+
+.dark .text-gray-200 {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark .text-gray-100 {
+  color: var(--dark-text-primary) !important;
+}
+
+/* Slate colors */
+.dark .text-slate-900 {
+  color: var(--dark-text-primary) !important;
+}
+
+.dark .text-slate-800 {
+  color: var(--dark-text-primary) !important;
+}
+
+.dark .text-slate-700 {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark .text-slate-600 {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark .text-slate-500 {
+  color: var(--dark-text-muted) !important;
+}
+
+.dark .text-slate-400 {
+  color: var(--dark-text-muted) !important;
+}
+
+.dark .text-slate-300 {
+  color: var(--dark-text-muted) !important;
+}
+
+.dark .text-slate-200 {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark .text-slate-100 {
+  color: var(--dark-text-primary) !important;
+}
+
+/* Buttons */
+.dark .bg-primary {
+  background-color: var(--dark-accent) !important;
+  color: white !important;
+  border: 1px solid var(--dark-accent);
+}
+
+.dark .bg-primary:hover {
+  background-color: var(--dark-accent-hover) !important;
+  border-color: var(--dark-accent-hover);
+}
+
+/* Ensure white text on primary buttons in both themes */
+.bg-primary.text-white,
+.bg-primary .text-white,
+.dark .bg-primary.text-white,
+.dark .bg-primary .text-white {
+  color: white !important;
+}
+
+/* Force white text on all primary buttons */
+button.bg-primary,
+button[class*="bg-primary"],
+.bg-primary button,
+[class*="bg-primary"] button {
+  color: white !important;
+}
+
+button.bg-primary:hover,
+button[class*="bg-primary"]:hover,
+.bg-primary button:hover,
+[class*="bg-primary"] button:hover {
+  color: white !important;
+}
+
+/* More specific overrides for shadcn/ui Button component */
+button[data-variant="default"].bg-primary,
+button[data-variant="default"][class*="bg-primary"] {
+  color: white !important;
+}
+
+/* Override any conflicting text color classes */
+.bg-primary.text-white,
+.bg-primary .text-white,
+.bg-primary span,
+.bg-primary p,
+.bg-primary div {
+  color: white !important;
+}
+
+/* Override shadcn/ui Button text colors */
+.bg-primary.text-primary-foreground,
+.bg-primary .text-primary-foreground {
+  color: white !important;
+}
+
+/* Force white text on all elements inside primary buttons */
+.bg-primary * {
+  color: white !important;
+}
+
+/* Specific override for the Filters button */
+button[class*="bg-primary"] * {
+  color: white !important;
+}
+
+.dark .bg-secondary {
+  background-color: var(--dark-bg-tertiary) !important;
+  color: var(--dark-text-primary) !important;
+  border: 1px solid var(--dark-border);
+}
+
+.dark .bg-secondary:hover {
+  background-color: var(--dark-bg-secondary) !important;
+  border-color: var(--dark-accent);
+}
+
+/* Input Fields */
+.dark input {
+  background-color: var(--dark-bg-secondary) !important;
+  border: 1px solid var(--dark-border) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark input:focus {
+  border-color: var(--dark-accent) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.dark input::placeholder {
+  color: var(--dark-text-muted) !important;
+}
+
+.dark textarea {
+  background-color: var(--dark-bg-secondary) !important;
+  border: 1px solid var(--dark-border) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark textarea:focus {
+  border-color: var(--dark-accent) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.dark textarea::placeholder {
+  color: var(--dark-text-muted) !important;
+}
+
+.dark select {
+  background-color: var(--dark-bg-secondary) !important;
+  border: 1px solid var(--dark-border) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark select:focus {
+  border-color: var(--dark-accent) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Hover States */
+.dark .hover\:bg-gray-100:hover {
+  background-color: var(--dark-bg-tertiary) !important;
+}
+
+.dark .hover\:bg-gray-200:hover {
+  background-color: var(--dark-bg-secondary) !important;
+}
+
+.dark .hover\:bg-gray-50:hover {
+  background-color: var(--dark-bg-tertiary) !important;
+}
+
+.dark .hover\:bg-gray-800:hover {
+  background-color: var(--dark-bg-tertiary) !important;
+}
+
+/* Navigation hover states */
+.dark .hover\:text-primary:hover {
+  color: var(--dark-accent) !important;
+}
+
+/* Button hover states in dark mode */
+.dark .hover\:bg-slate-800:hover {
+  background-color: var(--dark-bg-tertiary) !important;
+}
+
+.dark .hover\:text-white:hover {
+  color: white !important;
+}
+
+.dark .hover\:border-slate-600:hover {
+  border-color: var(--dark-border) !important;
+}
+
+/* Border Colors */
+.dark .border-gray-200 {
+  border-color: var(--dark-border) !important;
+}
+
+.dark .border-gray-300 {
+  border-color: var(--dark-border) !important;
+}
+
+.dark .border-gray-400 {
+  border-color: var(--dark-border) !important;
+}
+
+/* Links */
+.dark a {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark a:hover {
+  color: var(--dark-text-primary) !important;
+}
+
+/* Labels */
+.dark label {
+  color: var(--dark-text-secondary) !important;
+}
+
+/* Headings */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: var(--dark-text-primary) !important;
+}
+
+.dark p {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark span {
+  color: inherit !important;
+}
+
+/* Cards and containers */
+.dark .bg-slate-50 {
+  background-color: var(--dark-bg-secondary) !important;
+}
+
+.dark .bg-slate-100 {
+  background-color: var(--dark-bg-tertiary) !important;
+}
+
+.dark .bg-slate-200 {
+  background-color: var(--dark-bg-tertiary) !important;
+}
+
+/* Shadows */
+.dark .shadow {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark .shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Status colors */
+.dark .text-green-600 {
+  color: #10b981 !important;
+}
+
+.dark .text-red-600 {
+  color: #ef4444 !important;
+}
+
+.dark .text-yellow-600 {
+  color: #f59e0b !important;
+}
+
+.dark .text-blue-600 {
+  color: var(--dark-accent) !important;
+}
+
+.dark .text-purple-600 {
+  color: #8b5cf6 !important;
+}
+
+/* Badge colors */
+.dark .bg-green-100 {
+  background-color: #064e3b !important;
+  color: #6ee7b7 !important;
+}
+
+.dark .bg-red-100 {
+  background-color: #7f1d1d !important;
+  color: #fca5a5 !important;
+}
+
+.dark .bg-yellow-100 {
+  background-color: #78350f !important;
+  color: #fde68a !important;
+}
+
+.dark .bg-blue-100 {
+  background-color: #1e3a8a !important;
+  color: #93c5fd !important;
+}
+
+.dark .bg-purple-100 {
+  background-color: #581c87 !important;
+  color: #c4b5fd !important;
+}

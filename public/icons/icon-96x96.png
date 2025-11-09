@@ -1,0 +1,25 @@
+
+<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="96" height="96" rx="12" fill="url(#grad1)"/>
+  
+  <!-- Share icon -->
+  <g transform="translate(24, 24)" scale="0.1875">
+    <!-- Arrow up -->
+    <path d="M128 32 L96 64 L112 64 L112 96 L144 96 L144 64 L160 64 Z" fill="white" stroke="white" stroke-width="2"/>
+    <!-- Arrow down -->
+    <path d="M128 160 L96 128 L112 128 L112 96 L144 96 L144 128 L160 128 Z" fill="white" stroke="white" stroke-width="2"/>
+    <!-- Central circle -->
+    <circle cx="128" cy="96" r="16" fill="white"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="48" y="72" font-family="Arial, sans-serif" font-size="8" font-weight="bold" text-anchor="middle" fill="white">S&G</text>
+</svg>
