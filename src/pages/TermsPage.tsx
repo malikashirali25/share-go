@@ -7,11 +7,11 @@ const TermsPage = () => {
   const sections = [
     {
       title: '1. Acceptance of Terms',
-      content: `By accessing and using Share & Go ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.`
+      content: `By accessing and using SharinGo ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.`
     },
     {
       title: '2. Description of Service',
-      content: `Share & Go is a community-driven marketplace platform that allows users to buy, sell, and share items with other users. The platform includes communication tools such as messaging, voice calls, and email integration to facilitate transactions and community building.`
+      content: `SharinGo is a community-driven marketplace platform that allows users to buy, sell, and share items with other users. The platform includes communication tools such as messaging, voice calls, and email integration to facilitate transactions and community building.`
     },
     {
       title: '3. User Accounts',
@@ -41,7 +41,7 @@ const TermsPage = () => {
     },
     {
       title: '6. Transactions and Payments',
-      content: `Share & Go does not process payments directly. All transactions are conducted between users. We are not responsible for payment disputes, refunds, or any financial transactions between users. Users are responsible for their own payment methods and transaction security.`
+      content: `SharinGo does not process payments directly. All transactions are conducted between users. We are not responsible for payment disputes, refunds, or any financial transactions between users. Users are responsible for their own payment methods and transaction security.`
     },
     {
       title: '7. Safety and Security',
@@ -58,7 +58,7 @@ const TermsPage = () => {
     },
     {
       title: '9. Intellectual Property',
-      content: `The Service and its original content, features, and functionality are and will remain the exclusive property of Share & Go and its licensors. The Service is protected by copyright, trademark, and other laws.`
+      content: `The Service and its original content, features, and functionality are and will remain the exclusive property of SharinGo and its licensors. The Service is protected by copyright, trademark, and other laws.`
     },
     {
       title: '10. Termination',
@@ -70,7 +70,7 @@ const TermsPage = () => {
     },
     {
       title: '12. Limitation of Liability',
-      content: `In no event shall Share & Go, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the Service.`
+      content: `In no event shall SharinGo, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the Service.`
     },
     {
       title: '13. Governing Law',
@@ -116,7 +116,7 @@ const TermsPage = () => {
                 </div>
               </div>
               <p className="text-gray-700">
-                These Terms of Service ("Terms") govern your use of Share & Go's website and services. 
+                These Terms of Service ("Terms") govern your use of SharinGo's website and services. 
                 By using our platform, you agree to be bound by these terms.
               </p>
             </CardContent>

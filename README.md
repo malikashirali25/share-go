@@ -1,6 +1,6 @@
-# Share & Go - Modern Marketplace & Communication Platform
+# SharinGo - Modern Marketplace & Communication Platform
 
-A modern, professional, and interactive frontend website built with React, TailwindCSS, shadcn/ui, and Framer Motion. Share & Go is a community-driven marketplace that combines buying, selling, and sharing items with built-in communication tools.
+A modern, professional, and interactive frontend website built with React, TailwindCSS, shadcn/ui, and Framer Motion. SharinGo is a community-driven marketplace that combines buying, selling, and sharing items with built-in communication tools.
 
 ## 🚀 Features
 

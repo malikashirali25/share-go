@@ -5,6 +5,7 @@ import { Plus, X, Camera, Tag, DollarSign, AlignLeft, Package } from 'lucide-rea
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { Select } from '../components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { productService } from '../services/productService';
 import { addressService } from '../services/addressService';
@@ -12,6 +13,7 @@ import config from '../config';
 import type { CreateProductRequest, UpdateProductRequest, ProductCategory } from '../interfaces/product';
 import { ProductStatus } from '../interfaces/product';
 import type { Address, CreateAddressRequest } from '../interfaces/address';
+import { US_STATES, getCitiesByState } from '../data/usLocations';
 
 const CreateProduct = () => {
   const navigate = useNavigate();
@@ -45,11 +47,12 @@ const CreateProduct = () => {
     zipcode: '',
     city: '',
     state: '',
-    country: '',
+    country: 'United States',
     isDefault: false,
     lat: 0,
     lng: 0
   });
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -62,6 +65,21 @@ const CreateProduct = () => {
       loadProductData(Number(productId));
     }
   }, [productId, isEditMode]);
+
+  // Update available cities when state changes in address modal
+  useEffect(() => {
+    if (newAddress.state) {
+      const cities = getCitiesByState(newAddress.state);
+      setAvailableCities(cities);
+      // Reset city if it's not in the new state's cities
+      if (newAddress.city && !cities.includes(newAddress.city)) {
+        setNewAddress(prev => ({ ...prev, city: '' }));
+      }
+    } else {
+      setAvailableCities([]);
+      setNewAddress(prev => ({ ...prev, city: '' }));
+    }
+  }, [newAddress.state]);
 
   const loadProductData = async (id: number) => {
     setIsLoading(true);
@@ -250,7 +268,7 @@ const CreateProduct = () => {
         zipcode: '',
         city: '',
         state: '',
-        country: '',
+        country: 'United States',
         isDefault: false,
         lat: 0,
         lng: 0
@@ -617,62 +635,79 @@ const CreateProduct = () => {
                 <CardDescription>Enter your pickup address details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="address1">Address*</Label>
-                    <Input
-                      id="address1"
-                      value={newAddress.address1}
-                      onChange={(e) => setNewAddress(prev => ({ ...prev, address1: e.target.value }))}
-                      required
-                    />
-                  </div>
-                  {/* <div className="space-y-2">
-                    <Label htmlFor="address2">Address Line 2</Label>
-                    <Input
-                      id="address2"
-                      value={newAddress.address2}
-                      onChange={(e) => setNewAddress(prev => ({ ...prev, address2: e.target.value }))}
-                    />
-                  </div> */}
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country *</Label>
+                  <Select
+                    id="country"
+                    value={newAddress.country}
+                    onChange={(e) => setNewAddress(prev => ({ ...prev, country: e.target.value }))}
+                    disabled
+                    required
+                  >
+                    <option value="United States">United States</option>
+                  </Select>
+                  <p className="text-xs text-gray-500">Currently only USA addresses are supported</p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="address1">Street Address *</Label>
+                  <Input
+                    id="address1"
+                    value={newAddress.address1}
+                    onChange={(e) => setNewAddress(prev => ({ ...prev, address1: e.target.value }))}
+                    placeholder="Street address, P.O. box"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="state">State *</Label>
+                    <Select
+                      id="state"
+                      value={newAddress.state}
+                      onChange={(e) => setNewAddress(prev => ({ ...prev, state: e.target.value, city: '' }))}
+                      required
+                    >
+                      <option value="">Select a state</option>
+                      {US_STATES.map((state) => (
+                        <option key={state.code} value={state.code}>
+                          {state.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="city">City *</Label>
-                    <Input
+                    <Select
                       id="city"
                       value={newAddress.city}
                       onChange={(e) => setNewAddress(prev => ({ ...prev, city: e.target.value }))}
+                      disabled={!newAddress.state || availableCities.length === 0}
                       required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="state">State *</Label>
-                    <Input
-                      id="state"
-                      value={newAddress.state}
-                      onChange={(e) => setNewAddress(prev => ({ ...prev, state: e.target.value }))}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="zipcode">Zipcode *</Label>
-                    <Input
-                      id="zipcode"
-                      value={newAddress.zipcode}
-                      onChange={(e) => setNewAddress(prev => ({ ...prev, zipcode: e.target.value }))}
-                      required
-                    />
+                    >
+                      <option value="">Select a city</option>
+                      {availableCities.map((city) => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
+                    </Select>
+                    {!newAddress.state && (
+                      <p className="text-xs text-gray-500">Please select a state first</p>
+                    )}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="country">Country *</Label>
+                  <Label htmlFor="zipcode">ZIP Code *</Label>
                   <Input
-                    id="country"
-                    value={newAddress.country}
-                    onChange={(e) => setNewAddress(prev => ({ ...prev, country: e.target.value }))}
+                    id="zipcode"
+                    value={newAddress.zipcode}
+                    onChange={(e) => setNewAddress(prev => ({ ...prev, zipcode: e.target.value }))}
+                    placeholder="12345"
+                    maxLength={10}
                     required
                   />
                 </div>

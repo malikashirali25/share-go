@@ -174,6 +174,7 @@ class ProductService {
     minPrice?: number;
     maxPrice?: number;
     searchKeywords?: string;
+    location?: string;
     page?: number;
     limit?: number;
   }): Promise<PublicProductsResponse> {
@@ -190,6 +191,9 @@ class ProductService {
     }
     if (params?.searchKeywords) {
       queryParams.append('searchKeywords', params.searchKeywords);
+    }
+    if (params?.location) {
+      queryParams.append('location', params.location);
     }
     if (params?.page) {
       queryParams.append('page', params.page.toString());

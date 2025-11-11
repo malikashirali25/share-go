@@ -93,7 +93,7 @@ const Dashboard = () => {
         `}
       >
         <div className="flex items-center justify-between h-16 px-6 border-b">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Share & Go</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">SharinGo</h1>
           <button
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
@@ -146,7 +146,7 @@ const Dashboard = () => {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Share & Go</h1>
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">SharinGo</h1>
           <div className="w-9"></div> {/* Spacer for centering */}
         </div>
 
@@ -255,7 +255,7 @@ const Dashboard = () => {
                       </Link>
                     </Button>
                     <Button asChild variant="outline" className="w-full justify-start">
-                      <Link to="/ads">
+                      <Link to="/explore">
                         <ShoppingBag className="mr-2 h-4 w-4" />
                         Browse Items
                       </Link>

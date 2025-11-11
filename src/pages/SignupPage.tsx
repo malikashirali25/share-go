@@ -140,7 +140,7 @@ const SignupPage = () => {
               <h1 className="text-2xl font-bold">Create Account</h1>
             </div>
             <CardDescription>
-              Join Share & Go and start buying, selling, and sharing today
+              Join SharinGo and start buying, selling, and sharing today
             </CardDescription>
           </CardHeader>
             <CardContent>

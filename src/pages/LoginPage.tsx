@@ -75,7 +75,7 @@ const LoginPage = () => {
               <h1 className="text-2xl font-bold">Welcome Back</h1>
             </div>
               <CardDescription>
-                Sign in to your Share & Go account to continue
+                Sign in to your SharinGo account to continue
               </CardDescription>
             </CardHeader>
             <CardContent>

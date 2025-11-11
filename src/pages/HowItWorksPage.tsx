@@ -98,7 +98,7 @@ const HowItWorksPage: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-slate-100 mb-6"
           >
-            How Share & Go
+            How SharinGo
             <br />
             <span className="text-primary">Works</span>
           </motion.h1>

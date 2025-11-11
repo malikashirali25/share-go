@@ -304,7 +304,7 @@ export const mockEmails: Email[] = [
     id: '1',
     senderId: 'system_support',
     receiverId: '1', // Sarah Johnson
-    subject: 'Welcome to Share & Go!',
+    subject: 'Welcome to SharinGo!',
     content: 'Thank you for joining our community. Start sharing and discovering amazing items today!',
     timestamp: '2024-01-15T08:00:00Z',
     read: true,
@@ -380,7 +380,7 @@ export const mockTestimonials: Testimonial[] = [
     id: '1',
     name: 'Alex Thompson',
     role: 'Community Member',
-    content: 'Share & Go has helped me give my unused items a second life while helping others in need. The community is so caring and supportive!',
+    content: 'SharinGo has helped me give my unused items a second life while helping others in need. The community is so caring and supportive!',
     avatar: 'https://i.pravatar.cc/150?img=5',
     rating: 5
   },
@@ -396,7 +396,7 @@ export const mockTestimonials: Testimonial[] = [
     id: '3',
     name: 'David Kim',
     role: 'Student',
-    content: 'As a student, Share & Go has been a lifesaver! I\'ve found free textbooks, furniture, and even winter clothes. The community is amazing!',
+    content: 'As a student, SharinGo has been a lifesaver! I\'ve found free textbooks, furniture, and even winter clothes. The community is amazing!',
     avatar: 'https://i.pravatar.cc/150?img=4',
     rating: 4
   }

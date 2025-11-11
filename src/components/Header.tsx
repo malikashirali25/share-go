@@ -1,24 +1,65 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ShoppingBag, Bell, User, LogOut, Settings, Clock, ChevronDown } from 'lucide-react';
+import { Menu, X, ShoppingBag, Bell, User, LogOut, Clock, ChevronDown, Package } from 'lucide-react';
 import { Button } from './ui/button';
 import { useAuth } from '../contexts/AuthContext';
-import { useNotifications } from '../contexts/NotificationContext';
 import ThemeToggle from './ThemeToggle';
 import Logo from './Logo';
 import UserAvatar from './UserAvatar';
+import { notificationService, type Notification } from '../services/notificationService';
+import config from '../config';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { isLoggedIn, user, logout, isAdmin } = useAuth();
-  const { getUnreadCount, getUserNotifications } = useNotifications();
   const notificationDropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch notifications when user is logged in
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!isLoggedIn) {
+        setNotifications([]);
+        setUnreadCount(0);
+        return;
+      }
+
+      try {
+        setIsLoadingNotifications(true);
+        const response = await notificationService.getNotifications({ page: 1, limit: 10 });
+        console.log('📬 Notifications response:', response);
+        
+        if (response.status && response.data) {
+          console.log('✅ Setting notifications:', response.data.notifications);
+          setNotifications(response.data.notifications);
+          const unread = response.data.notifications.filter(n => !n.isRead).length;
+          setUnreadCount(unread);
+          console.log(`📊 Total: ${response.data.notifications.length}, Unread: ${unread}`);
+        } else {
+          console.log('❌ Response not successful or no data:', response);
+        }
+      } catch (error) {
+        console.error('❌ Failed to fetch notifications:', error);
+      } finally {
+        setIsLoadingNotifications(false);
+      }
+    };
+
+    fetchNotifications();
+    
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    
+    return () => clearInterval(interval);
+  }, [isLoggedIn]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -39,12 +80,22 @@ const Header = () => {
 
   const navigation = [
     { name: 'Home', href: '/' },
-    { name: 'Find Items', href: '/ads' },
+    { name: 'Find Items', href: '/explore' },
     { name: 'How It Works', href: '/how-it-works' },
     { name: 'Contact', href: '/contact' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  // Debug: Log notifications state whenever it changes
+  useEffect(() => {
+    console.log('🔔 Notifications state changed:', {
+      count: notifications.length,
+      unreadCount,
+      isLoading: isLoadingNotifications,
+      notifications: notifications.slice(0, 2) // Log first 2 for debugging
+    });
+  }, [notifications, unreadCount, isLoadingNotifications]);
 
   // Helper function to format time
   const formatTimeAgo = (timestamp: string) => {
@@ -58,16 +109,43 @@ const Header = () => {
     return `${Math.floor(diffInMinutes / 1440)}d ago`;
   };
 
-  // Helper function to get notification icon
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
+  // Helper function to get notification icon based on module
+  const getNotificationIcon = (module: string) => {
+    switch (module) {
+      case 'product': return Package;
       case 'ad': return ShoppingBag;
       default: return Bell;
     }
   };
 
-  // Get recent notifications for dropdown
-  const recentNotifications = user ? getUserNotifications(user.id).slice(0, 5) : [];
+  // Handle notification click
+  const handleNotificationClick = async (notification: Notification) => {
+    try {
+      // Mark as read
+      if (!notification.isRead) {
+        await notificationService.markAsRead(notification.id);
+        // Update local state
+        setNotifications(prev => prev.map(n => 
+          n.id === notification.id ? { ...n, isRead: true } : n
+        ));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+
+      // Navigate based on module
+      if (notification.module === 'product' && notification.product) {
+        navigate(`/product/${notification.product.nameSlug}`);
+      }
+      
+      setIsNotificationDropdownOpen(false);
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+      // Still navigate even if marking as read fails
+      if (notification.module === 'product' && notification.product) {
+        navigate(`/product/${notification.product.nameSlug}`);
+      }
+      setIsNotificationDropdownOpen(false);
+    }
+  };
 
   return (
     <motion.header
@@ -118,9 +196,14 @@ const Header = () => {
                     onClick={() => setIsNotificationDropdownOpen(!isNotificationDropdownOpen)}
                   >
                     <Bell className="h-5 w-5" />
-                    {user && getUnreadCount(user.id) > 0 && (
+                    {/* Show red dot if there are any notifications */}
+                    {notifications.length > 0 && unreadCount === 0 && (
+                      <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                    )}
+                    {/* Show count badge if there are unread notifications */}
+                    {unreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                        {getUnreadCount(user.id) > 99 ? '99+' : getUnreadCount(user.id)}
+                        {unreadCount > 99 ? '99+' : unreadCount}
                       </span>
                     )}
                   </Button>
@@ -149,43 +232,63 @@ const Header = () => {
                         </div>
                         
                         <div>
-                          {recentNotifications.length > 0 ? (
-                            recentNotifications.map((notification) => {
-                              const IconComponent = getNotificationIcon(notification.type);
+                          {isLoadingNotifications ? (
+                            <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                              <p>Loading notifications...</p>
+                            </div>
+                          ) : notifications.length > 0 ? (
+                            notifications.slice(0, 5).map((notification) => {
+                              const IconComponent = getNotificationIcon(notification.module);
+                              const productImage = notification.product?.image 
+                                ? (notification.product.image.startsWith('http') 
+                                    ? notification.product.image 
+                                    : `${config.api.mediaUrl}${notification.product.image}`)
+                                : null;
+                              
                               return (
                                 <div
                                   key={notification.id}
-                                  className={`p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${
-                                    !notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                                  className={`p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${
+                                    !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                                   }`}
-                                  onClick={() => {
-                                    setIsNotificationDropdownOpen(false);
-                                    if (notification.actionUrl) {
-                                      navigate(notification.actionUrl);
-                                    }
-                                  }}
+                                  onClick={() => handleNotificationClick(notification)}
                                 >
                                   <div className="flex items-start gap-3">
-                                    <div className={`p-2 rounded-full ${
-                                      !notification.read ? 'bg-blue-100 dark:bg-blue-800' : 'bg-gray-100 dark:bg-gray-600'
-                                    }`}>
-                                      <IconComponent className="w-4 h-4" />
-                                    </div>
+                                    {productImage ? (
+                                      <img 
+                                        src={productImage} 
+                                        alt={notification.product?.name}
+                                        className="w-10 h-10 rounded object-cover"
+                                        onError={(e) => {
+                                          (e.target as HTMLImageElement).src = '/icons/product_placeholder.jpg';
+                                        }}
+                                      />
+                                    ) : (
+                                      <div className={`p-2 rounded-full ${
+                                        !notification.isRead ? 'bg-blue-100 dark:bg-blue-800' : 'bg-gray-100 dark:bg-gray-600'
+                                      }`}>
+                                        <IconComponent className="w-4 h-4" />
+                                      </div>
+                                    )}
                                     
                                     <div className="flex-1 min-w-0">
                                       <h4 className={`font-medium text-sm ${
-                                        !notification.read ? 'text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300'
+                                        !notification.isRead ? 'text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300'
                                       }`}>
                                         {notification.title}
                                       </h4>
-                                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
                                         {notification.message}
                                       </p>
                                       <div className="flex items-center gap-2 mt-2">
                                         <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                                           <Clock className="w-3 h-3" />
-                                          {formatTimeAgo(notification.timestamp)}
+                                          {formatTimeAgo(notification.createdAt)}
                                         </span>
+                                        {!notification.isRead && (
+                                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                        )}
                                       </div>
                                     </div>
                                   </div>

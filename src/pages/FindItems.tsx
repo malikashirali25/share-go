@@ -3,34 +3,29 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
-  Filter, 
   Grid, 
   List, 
   MapPin, 
   Heart, 
-  MessageCircle,
   Star,
-  Calendar,
   X,
   SlidersHorizontal,
-  TrendingUp,
-  Clock,
   DollarSign,
   Tag,
   ChevronDown,
   Check,
-  Sparkles,
-  Zap,
-  Sparkle
+  Sparkles
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent } from '../components/ui/card';
+import { SearchableSelect } from '../components/ui/searchable-select';
 import { productService } from '../services/productService';
 import { ProductCategory, PublicProduct } from '../interfaces/product';
 import { Ad } from '../types';
 import UserAvatar from '../components/UserAvatar';
 import config from '../config';
+import { getAllCitiesWithStates } from '../data/usLocations';
 
 const FindItems = () => {
   const [products, setProducts] = useState<PublicProduct[]>([]);
@@ -46,14 +41,19 @@ const FindItems = () => {
   const [selectedCondition, setSelectedCondition] = useState('All');
   const [favorites, setFavorites] = useState<string[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const conditions = ['All', 'New', 'Like New', 'Good', 'Fair', 'Poor'];
-  const locations = ['All', 'New York, NY', 'San Francisco, CA', 'Austin, TX', 'Seattle, WA'];
+  
+  // Generate location options with cities grouped by state
+  const locationOptions = [
+    { value: 'All', label: 'All Locations', group: '' },
+    ...getAllCitiesWithStates()
+  ];
+  
   const sortOptions = [
     { value: 'newest', label: 'Recently Shared' },
     { value: 'oldest', label: 'Shared Long Ago' },
@@ -64,9 +64,8 @@ const FindItems = () => {
   // Map PublicProduct to Ad interface
   const mapProductToAd = (product: PublicProduct): Ad => {
     // Map media URLs - prepend mediaUrl if needed
-    const images = product.media
-      .sort((a, b) => a.sequence - b.sequence)
-      .map(media => {
+    const sortedMedia = [...product.media].sort((a, b) => a.sequence - b.sequence);
+    const images = sortedMedia.map(media => {
         const mediaUrl = media.mediaUrl;
         // If mediaUrl doesn't start with http, prepend the base media URL
         if (mediaUrl && !mediaUrl.startsWith('http')) {
@@ -92,7 +91,7 @@ const FindItems = () => {
       id: product.id.toString(),
       title: capitalizeName(product.name),
       description: product.description,
-      price: parseFloat(product.price.toString()),
+      price: Number.parseFloat(product.price.toString()),
       category: product.category.name,
       location: product.address?.city || 'Not specified',
       images: images,
@@ -153,6 +152,7 @@ const FindItems = () => {
         minPrice?: number;
         maxPrice?: number;
         searchKeywords?: string;
+        location?: string;
         page?: number;
         limit?: number;
       } = {
@@ -168,12 +168,17 @@ const FindItems = () => {
         }
       }
 
-      // Add price range filter
+      // Add price range filter (server-side)
       if (priceRange[0] > 0) {
         params.minPrice = priceRange[0];
       }
       if (priceRange[1] < 10000) {
         params.maxPrice = priceRange[1];
+      }
+
+      // Add location filter (server-side)
+      if (selectedLocation !== 'All') {
+        params.location = selectedLocation;
       }
 
       // Add search keywords (only if 3+ characters)
@@ -213,7 +218,7 @@ const FindItems = () => {
       loadProducts(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, priceRange[0], priceRange[1]]);
+  }, [selectedCategory, selectedLocation, priceRange[0], priceRange[1]]);
 
   // Load products when page changes
   useEffect(() => {
@@ -248,11 +253,10 @@ const FindItems = () => {
   // Map products to ads
   const ads = products.map(mapProductToAd);
 
-  // Client-side filtering for location and condition (since API doesn't support these)
+  // Client-side filtering for condition only (location is now server-side)
   const filteredAds = ads.filter(ad => {
-    const matchesLocation = selectedLocation === 'All' || ad.location === selectedLocation;
     const matchesCondition = selectedCondition === 'All' || ad.condition === selectedCondition.toLowerCase().replace(' ', '-');
-    return matchesLocation && matchesCondition;
+    return matchesCondition;
   });
 
   // Client-side sorting
@@ -355,16 +359,7 @@ const FindItems = () => {
     return `${diffInYears}y ago`;
   };
 
-  const getConditionColor = (condition: string) => {
-    switch (condition) {
-      case 'new': return 'text-green-800 bg-green-200 dark:text-green-100 dark:bg-green-800';
-      case 'like-new': return 'text-blue-800 bg-blue-200 dark:text-blue-100 dark:bg-blue-800';
-      case 'good': return 'text-yellow-800 bg-yellow-200 dark:text-yellow-100 dark:bg-yellow-800';
-      case 'fair': return 'text-orange-800 bg-orange-200 dark:text-orange-100 dark:bg-orange-800';
-      case 'poor': return 'text-red-800 bg-red-200 dark:text-red-100 dark:bg-red-800';
-      default: return 'text-gray-800 bg-gray-200 dark:text-gray-100 dark:bg-gray-800';
-    }
-  };
+  // Removed unused getConditionColor function
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
@@ -529,7 +524,7 @@ const FindItems = () => {
             <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-t border-slate-200/50 dark:border-slate-700/50">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 {/* Filter Header */}
-                <motion.div
+                {/* <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
@@ -550,7 +545,7 @@ const FindItems = () => {
                   <p className="text-slate-600 dark:text-slate-400">
                     Discover items shared by community members with our helpful filters
                   </p>
-                </motion.div>
+                </motion.div> */}
 
                 {/* Filter Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -605,18 +600,14 @@ const FindItems = () => {
                           Location
                         </div>
                       </label>
-                      <div className="relative">
-                        <select
-                          value={selectedLocation}
-                          onChange={(e) => setSelectedLocation(e.target.value)}
-                          className="w-full px-4 py-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 text-slate-900 dark:text-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 hover:border-primary/30 shadow-lg hover:shadow-xl appearance-none cursor-pointer"
-                        >
-                          {locations.map(location => (
-                            <option key={location} value={location}>{location}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
-                      </div>
+                      <SearchableSelect
+                        options={locationOptions}
+                        value={selectedLocation}
+                        onChange={(value) => setSelectedLocation(value)}
+                        placeholder="All Locations"
+                        searchPlaceholder="Search cities..."
+                        grouped={true}
+                      />
                     </div>
                   </motion.div>
 
@@ -686,7 +677,7 @@ const FindItems = () => {
                         max="10000"
                         value={priceRange[1]}
                         onChange={(e) => {
-                          setPriceRange([priceRange[0], parseInt(e.target.value)]);
+                          setPriceRange([priceRange[0], Number.parseInt(e.target.value, 10)]);
                           setPage(1); // Reset to first page when price changes
                         }}
                         className="w-full h-3 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded-full appearance-none cursor-pointer slider-thumb"
@@ -773,9 +764,9 @@ const FindItems = () => {
               </h2>
               <p className="text-slate-600 dark:text-slate-400">
                 {total} {total === 1 ? 'item' : 'items'} available
-                {(selectedLocation !== 'All' || selectedCondition !== 'All') && (
+                {selectedCondition !== 'All' && sortedAds.length !== total && (
                   <span className="ml-2 text-sm text-blue-600 dark:text-blue-400">
-                    (Showing {sortedAds.length} after filters)
+                    (Showing {sortedAds.length} after condition filter)
                   </span>
                 )}
               </p>
@@ -823,8 +814,8 @@ const FindItems = () => {
           <AnimatePresence mode="wait">
             {isLoading ? (
               <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="animate-pulse">
+                {[...new Array(8)].map((_, i) => (
+                  <div key={`skeleton-${i}`} className="animate-pulse">
                     <div className="bg-slate-200 dark:bg-slate-700 rounded-lg aspect-square mb-4"></div>
                     <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-2"></div>
                     <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>

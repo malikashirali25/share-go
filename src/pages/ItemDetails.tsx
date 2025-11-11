@@ -336,7 +336,7 @@ const ItemDetails = () => {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Item Not Found</h1>
           <p className="text-gray-600 mb-4">{error || 'The item you\'re looking for doesn\'t exist.'}</p>
-          <Button onClick={() => navigate('/ads')}>
+          <Button onClick={() => navigate('/explore')}>
             Back to Browse
           </Button>
         </div>

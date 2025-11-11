@@ -79,7 +79,7 @@ const AboutPage = () => {
     {
       year: '2023',
       title: 'Company Founded',
-      description: 'Share & Go was founded with a vision to create a better marketplace experience.'
+      description: 'SharinGo was founded with a vision to create a better marketplace experience.'
     },
     {
       year: '2024',
@@ -119,7 +119,7 @@ const AboutPage = () => {
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-4xl font-bold text-gray-900">About Share & Go</h1>
+            <h1 className="text-4xl font-bold text-gray-900">About SharinGo</h1>
           </div>
           <div className="text-center max-w-4xl mx-auto">
             <p className="text-xl text-gray-600 leading-relaxed">
@@ -238,7 +238,7 @@ const AboutPage = () => {
         >
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Meet Our Team</h2>
-            <p className="text-xl text-gray-600">The people behind Share & Go</p>
+            <p className="text-xl text-gray-600">The people behind SharinGo</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {teamMembers.map((member, index) => (
@@ -330,7 +330,7 @@ const AboutPage = () => {
             <CardContent className="p-8 text-center">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Get in Touch</h2>
               <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-                Have questions about Share & Go or want to work with us? We'd love to hear from you.
+                Have questions about SharinGo or want to work with us? We'd love to hear from you.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button>

@@ -49,8 +49,8 @@ const FAQPage = () => {
     },
     {
       id: '6',
-      question: 'Is there a fee to use Share & Go?',
-      answer: 'Share & Go is free to use for basic features. We may offer premium features in the future, but posting and browsing ads will always be free.',
+      question: 'Is there a fee to use SharinGo?',
+      answer: 'SharinGo is free to use for basic features. We may offer premium features in the future, but posting and browsing ads will always be free.',
       category: 'General'
     },
     {
@@ -61,8 +61,8 @@ const FAQPage = () => {
     },
     {
       id: '8',
-      question: 'Can I sell services on Share & Go?',
-      answer: 'Currently, Share & Go is focused on physical items. We may expand to services in the future, but for now, please only post physical items for sale.',
+      question: 'Can I sell services on SharinGo?',
+      answer: 'Currently, SharinGo is focused on physical items. We may expand to services in the future, but for now, please only post physical items for sale.',
       category: 'General'
     },
     {
@@ -110,7 +110,7 @@ const FAQPage = () => {
             <h1 className="text-3xl font-bold text-gray-900">Frequently Asked Questions</h1>
           </div>
           <p className="text-xl text-gray-600 max-w-3xl">
-            Find answers to common questions about using Share & Go. Can't find what you're looking for? Contact our support team.
+            Find answers to common questions about using SharinGo. Can't find what you're looking for? Contact our support team.
           </p>
         </motion.div>
 

@@ -24,10 +24,10 @@ const Footer = () => {
     ],
     features: isLoggedIn ? [
       { name: 'Dashboard', href: '/dashboard' },
-      { name: 'Find Items', href: '/ads' },
+      { name: 'Find Items', href: '/explore' },
       { name: 'Share Items', href: '/post-ad' },
     ] : [
-      { name: 'Find Items', href: '/ads' },
+      { name: 'Find Items', href: '/explore' },
       { name: 'How It Works', href: '/how-it-works' },
       { name: 'Get Started', href: '/signup' },
     ],
@@ -188,7 +188,7 @@ const Footer = () => {
           className="mt-8 pt-4 border-t border-gray-800 text-center"
         >
           <p className="text-sm text-gray-400">
-            © {currentYear} Share & Go. All rights reserved.
+            © {currentYear} SharinGo. All rights reserved.
           </p>
         </motion.div>
       </div>

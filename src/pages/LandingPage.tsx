@@ -216,7 +216,7 @@ const LandingPage = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.4 }}
                   >
-                    Share & Go
+                    SharinGo
                   </motion.span>
                   <motion.span 
                     className="block text-blue-600 dark:text-blue-400"
@@ -254,7 +254,7 @@ const LandingPage = () => {
                   guestUrl="/dashboard/create-product"
                 />
                 <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 hover:scale-105 transition-all duration-300 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-800 dark:hover:text-white">
-                  <Link to="/ads">
+                  <Link to="/explore">
                     <Gift className="mr-2 h-5 w-5" />
                     Find Items
                   </Link>
@@ -551,7 +551,7 @@ const LandingPage = () => {
             </div>
             <h2 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-slate-100 mb-6">What Our Community Says</h2>
             <p className="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
-              Join thousands of caring community members who trust Share & Go for sharing and helping others.
+              Join thousands of caring community members who trust SharinGo for sharing and helping others.
             </p>
           </motion.div>
 
@@ -752,7 +752,7 @@ const LandingPage = () => {
                 transition={{ duration: 0.2 }}
               >
                 <Button asChild size="lg" variant="outline" className="text-lg px-10 py-6 border-white text-white hover:bg-white hover:text-slate-900 bg-transparent group shadow-lg hover:shadow-xl transition-all duration-300">
-                  <Link to="/ads">
+                  <Link to="/explore">
                     <Gift className="mr-2 h-5 w-5" />
                     Find Items
                   </Link>

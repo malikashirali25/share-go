@@ -62,6 +62,7 @@ const AppContent = () => {
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
+            <Route path="/explore" element={<FindItems />} />
             <Route path="/browse" element={<FindItems />} />
             <Route path="/browse-ads" element={<FindItems />} />
             <Route path="/ads" element={<FindItems />} />

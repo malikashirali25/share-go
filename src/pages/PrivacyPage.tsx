@@ -142,7 +142,7 @@ const PrivacyPage = () => {
                 </div>
               </div>
               <p className="text-gray-700">
-                This Privacy Policy explains how Share & Go collects, uses, and protects your information 
+                This Privacy Policy explains how SharinGo collects, uses, and protects your information 
                 when you use our platform. Your privacy is important to us, and we are committed to 
                 protecting your personal information.
               </p>
