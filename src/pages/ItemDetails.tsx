@@ -47,6 +47,9 @@ const ItemDetails = () => {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportMessage, setReportMessage] = useState('');
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   useEffect(() => {
     // Use nameSlug if available, otherwise fall back to id
@@ -244,6 +247,39 @@ const ItemDetails = () => {
       return;
     }
     setShowContactModal(true);
+  };
+
+  const handleReportProduct = () => {
+    if (!isLoggedIn) {
+      const pathname = nameSlug ? `/product/${nameSlug}` : `/item/${id}`;
+      navigate('/login', { state: { from: { pathname } } });
+      return;
+    }
+    setShowReportModal(true);
+  };
+
+  const handleSubmitReport = async () => {
+    if (!product || isSubmittingReport) return;
+
+    try {
+      setIsSubmittingReport(true);
+      
+      // Message is optional, so we can submit even if it's empty
+      const trimmedMessage = reportMessage.trim();
+      await productService.reportProduct(product.id, trimmedMessage || undefined);
+      
+      // Show success message
+      alert('Report submitted successfully. Thank you for helping keep our community safe.');
+      
+      // Close modal and reset
+      setShowReportModal(false);
+      setReportMessage('');
+    } catch (err: any) {
+      console.error('Error submitting report:', err);
+      alert(err.message || 'Failed to submit report. Please try again.');
+    } finally {
+      setIsSubmittingReport(false);
+    }
   };
 
   const handleSendMessage = async () => {
@@ -664,7 +700,11 @@ const ItemDetails = () => {
             {/* Report */}
             <Card>
               <CardContent className="p-4">
-                <Button variant="outline" className="w-full">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={handleReportProduct}
+                >
                   <Flag className="mr-2 h-4 w-4" />
                   Report This Ad
                 </Button>
@@ -761,6 +801,85 @@ const ItemDetails = () => {
                     <>
                       <Send className="mr-2 h-4 w-4" />
                       Send Message
+                    </>
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Report Product Modal */}
+      <AnimatePresence>
+        {showReportModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowReportModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">Report Product</h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowReportModal(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  Please provide details about why you're reporting this product. Our team will review your report.
+                </p>
+                <Label htmlFor="report-message">Reason for Report (Optional)</Label>
+                <textarea
+                  id="report-message"
+                  value={reportMessage}
+                  onChange={(e) => setReportMessage(e.target.value)}
+                  placeholder="Please describe the issue with this product..."
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                  rows={5}
+                  disabled={isSubmittingReport}
+                />
+              </div>
+
+              <div className="flex space-x-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowReportModal(false);
+                    setReportMessage('');
+                  }}
+                  disabled={isSubmittingReport}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 bg-red-600 hover:bg-red-700"
+                  onClick={handleSubmitReport}
+                  disabled={isSubmittingReport}
+                >
+                  {isSubmittingReport ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <Flag className="mr-2 h-4 w-4" />
+                      Submit Report
                     </>
                   )}
                 </Button>

@@ -7,6 +7,7 @@ import type {
   PublicProductsResponse,
   PublicProductDetailResponse,
   ProductViewResponse,
+  ProductReportsResponse,
 } from '../interfaces/product';
 
 class ProductService {
@@ -154,6 +155,18 @@ class ProductService {
     });
   }
 
+  async updateProductStatusAdmin(productId: number, status: number, userId?: number): Promise<Product> {
+    const payload: { status: number; userId?: number } = { status };
+    if (typeof userId === 'number') {
+      payload.userId = userId;
+    }
+
+    return this.request<Product>(`/products/${productId}/admin/status`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+  }
+
   // Delete a product
   async deleteProduct(productId: number): Promise<void> {
     await this.request(`/products/${productId}`, {
@@ -274,6 +287,58 @@ class ProductService {
   async incrementProductView(nameSlug: string): Promise<ProductViewResponse> {
     return this.request<ProductViewResponse>(`/products/public/${nameSlug}/view`, {
       method: 'POST',
+    });
+  }
+
+  // Get authenticated product listing (for admin)
+  async getAuthenticatedProductListing(params?: {
+    categoryId?: number;
+    sortBy?: 'name' | 'createdAt' | 'price';
+    order?: 'ASC' | 'DESC';
+    keyword?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<PublicProductsResponse> {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.categoryId) {
+      queryParams.append('categoryId', params.categoryId.toString());
+    }
+    if (params?.sortBy) {
+      queryParams.append('sortBy', params.sortBy);
+    }
+    if (params?.order) {
+      queryParams.append('order', params.order);
+    }
+    if (params?.keyword) {
+      queryParams.append('keyword', params.keyword);
+    }
+    if (params?.page) {
+      queryParams.append('page', params.page.toString());
+    }
+    if (params?.limit) {
+      queryParams.append('limit', params.limit.toString());
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/products/authenticated/listing${queryString ? `?${queryString}` : ''}`;
+    
+    return this.request<PublicProductsResponse>(endpoint);
+  }
+
+  // Get product reports (for admin)
+  async getProductReports(productId: number): Promise<ProductReportsResponse> {
+    return this.request<ProductReportsResponse>(`/products/${productId}/reports`);
+  }
+
+  // Report a product
+  async reportProduct(productId: number, message?: string): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>(`/products/report`, {
+      method: 'POST',
+      body: JSON.stringify({ 
+        productId,
+        ...(message && { message })
+      }),
     });
   }
 }

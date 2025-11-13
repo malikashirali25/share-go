@@ -19,6 +19,7 @@ export interface LoginResponse {
       latitude?: number;
       longitude?: number;
       createdAt?: string;
+      role?: 'user' | 'admin';
     };
   };
 }
@@ -60,6 +61,7 @@ export interface VerifyOTPResponse {
       latitude?: number;
       longitude?: number;
       createdAt?: string;
+      role: 'user' | 'admin';
     };
     accessToken: string;
   };

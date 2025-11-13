@@ -49,7 +49,7 @@ class NotificationService {
   private readonly baseUrl = config.api.baseUrl;
 
   async updatePublicFcmToken(payload: UpdateFcmTokenPayload): Promise<UpdateFcmTokenResponse> {
-    const response = await fetch(`${this.baseUrl}/notifications/fcm-token/public`, {
+    const response = await fetch(`${this.baseUrl}/notifications/token-update`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

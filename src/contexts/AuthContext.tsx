@@ -67,11 +67,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           firstName: response.data.user.firstName,
           lastName: response.data.user.lastName,
           email: response.data.user.email,
-          image: '', // Default image
-          latitude: undefined, // Default latitude
-          longitude: undefined, // Default longitude
-          createdAt: new Date().toISOString(),
-          role: 'user', // Always 'user'
+          image: response.data.user.image || '', // Get image from API or default
+          latitude: response.data.user.latitude || undefined,
+          longitude: response.data.user.longitude || undefined,
+          createdAt: response.data.user.createdAt || new Date().toISOString(),
+          role: response.data.user.role || 'user',
         };
 
         // Store user data and token
@@ -185,7 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             latitude: response.data.user.latitude || undefined,
             longitude: response.data.user.longitude || undefined,
             createdAt: response.data.user.createdAt || new Date().toISOString(),
-            role: 'user', // Always 'user'
+            role: response.data.user.role || 'user', // Get role from API, default to 'user'
           };
 
           // Auto-login the user
@@ -244,7 +244,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const isAdmin = false; // Role is always 'user' now
+  const isAdmin = useMemo(() => user?.role === 'admin', [user?.role]);
 
   const contextValue = useMemo(() => ({
     user, 

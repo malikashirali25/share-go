@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ShoppingBag, Bell, User, LogOut, Clock, ChevronDown, Package } from 'lucide-react';
+import { Menu, X, ShoppingBag, Bell, User, LogOut, Clock, ChevronDown, Package, MessageCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { useAuth } from '../contexts/AuthContext';
+import { useSocket } from '../contexts/SocketContext';
 import ThemeToggle from './ThemeToggle';
 import Logo from './Logo';
 import UserAvatar from './UserAvatar';
@@ -20,46 +21,74 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isLoggedIn, user, logout, isAdmin } = useAuth();
+  const { socket, connected } = useSocket();
   const notificationDropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Function to fetch notifications - extracted for reuse
+  const fetchNotifications = useCallback(async () => {
+    if (!isLoggedIn || !user) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+
+    try {
+      setIsLoadingNotifications(true);
+      const response = await notificationService.getNotifications({ page: 1, limit: 10 });
+      console.log('📬 Notifications response:', response);
+      
+      if (response.status && response.data) {
+        console.log('✅ Setting notifications:', response.data.notifications);
+        setNotifications(response.data.notifications);
+        const unread = response.data.notifications.filter(n => !n.isRead).length;
+        setUnreadCount(unread);
+        console.log(`📊 Total: ${response.data.notifications.length}, Unread: ${unread}`);
+      } else {
+        console.log('❌ Response not successful or no data:', response);
+      }
+    } catch (error) {
+      console.error('❌ Failed to fetch notifications:', error);
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  }, [isLoggedIn, user?.id]);
+
   // Fetch notifications when user is logged in
   useEffect(() => {
-    const fetchNotifications = async () => {
-      if (!isLoggedIn) {
-        setNotifications([]);
-        setUnreadCount(0);
-        return;
-      }
-
-      try {
-        setIsLoadingNotifications(true);
-        const response = await notificationService.getNotifications({ page: 1, limit: 10 });
-        console.log('📬 Notifications response:', response);
-        
-        if (response.status && response.data) {
-          console.log('✅ Setting notifications:', response.data.notifications);
-          setNotifications(response.data.notifications);
-          const unread = response.data.notifications.filter(n => !n.isRead).length;
-          setUnreadCount(unread);
-          console.log(`📊 Total: ${response.data.notifications.length}, Unread: ${unread}`);
-        } else {
-          console.log('❌ Response not successful or no data:', response);
-        }
-      } catch (error) {
-        console.error('❌ Failed to fetch notifications:', error);
-      } finally {
-        setIsLoadingNotifications(false);
-      }
-    };
-
     fetchNotifications();
     
     // Poll for new notifications every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
     
     return () => clearInterval(interval);
-  }, [isLoggedIn]);
+  }, [isLoggedIn, fetchNotifications]);
+
+  // Listen for new notifications via socket
+  useEffect(() => {
+    if (!socket || !connected || !isLoggedIn || !user) {
+      return;
+    }
+
+    console.log('🔌 Setting up newNotification socket listener for user:', user.id);
+
+    const handleNewNotification = (data: any) => {
+      console.log('🔔 New notification received via socket:', data);
+      
+      // Refresh notification list
+      fetchNotifications();
+      
+      // Optional: Show a brief visual feedback (the badge will update automatically)
+      // You could add a toast notification here if you have a toast system
+    };
+
+    socket.on('newNotification', handleNewNotification);
+
+    return () => {
+      console.log('🔌 Cleaning up newNotification socket listener');
+      socket.off('newNotification', handleNewNotification);
+    };
+  }, [socket, connected, isLoggedIn, user?.id, fetchNotifications]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -114,6 +143,7 @@ const Header = () => {
     switch (module) {
       case 'product': return Package;
       case 'ad': return ShoppingBag;
+      case 'message': return MessageCircle;
       default: return Bell;
     }
   };
@@ -134,6 +164,8 @@ const Header = () => {
       // Navigate based on module
       if (notification.module === 'product' && notification.product) {
         navigate(`/product/${notification.product.nameSlug}`);
+      } else if (notification.module === 'message') {
+        navigate('/dashboard/messages');
       }
       
       setIsNotificationDropdownOpen(false);
@@ -142,6 +174,8 @@ const Header = () => {
       // Still navigate even if marking as read fails
       if (notification.module === 'product' && notification.product) {
         navigate(`/product/${notification.product.nameSlug}`);
+      } else if (notification.module === 'message') {
+        navigate('/dashboard/messages');
       }
       setIsNotificationDropdownOpen(false);
     }

@@ -98,6 +98,7 @@ export interface PublicProduct {
   description: string;
   views: number;
   tags: string;
+  status: number;
   createdAt: string;
   updatedAt: string;
   category: ProductCategory;
@@ -133,4 +134,31 @@ export interface ProductViewResponse {
     id: number;
     views: number;
   };
+}
+
+export interface ProductReportUser {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+export interface ProductReport {
+  id: number;
+  reportedUserId: number;
+  productId: number;
+  message: string;
+  createdAt: string;
+  updatedAt: string;
+  reportedUser: ProductReportUser;
+}
+
+export interface ProductReportsResponse {
+  message: string;
+  status: boolean;
+  data: {
+    reports: ProductReport[];
+    total: number;
+  };
+  total: number;
 }

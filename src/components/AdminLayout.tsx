@@ -9,7 +9,12 @@ import {
   ArrowLeft,
   BarChart3,
   Menu,
-  X
+  X,
+  Home,
+  Package,
+  MapPin,
+  MessageCircle,
+  Bell
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,16 +25,22 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
   const navigation = [
-    { name: 'Dashboard', href: '/admin', icon: BarChart3 },
-    { name: 'Users', href: '/admin/users', icon: Users },
-    { name: 'Ads', href: '/admin/ads', icon: ShoppingBag },
-    { name: 'Reports', href: '/admin/reports', icon: Flag },
-    { name: 'Settings', href: '/admin/settings', icon: Settings },
+    ...(isAdmin ? [
+      { name: 'All Products', href: '/dashboard/admin/products', icon: ShoppingBag },
+      // { name: 'Users', href: '/dashboard/admin/users', icon: Users },
+    ] : [
+      { name: 'Dashboard', href: '/dashboard', icon: Home },
+      { name: 'Items', href: '/dashboard/products', icon: Package },
+      { name: 'Addresses', href: '/dashboard/addresses', icon: MapPin },
+      { name: 'Messages', href: '/dashboard/messages', icon: MessageCircle },
+      { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
+      { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+    ]),
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -101,11 +112,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <img
-                  src={user?.avatar}
-                  alt={user?.name}
+                  src={user?.image}
+                  alt={`${user?.firstName} ${user?.lastName}`}
                   className="h-8 w-8 rounded-full"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/icons/user_placeholder.jpg';
+                  }}
                 />
-                <span className="text-sm font-medium text-gray-700">{user?.name}</span>
+                <span className="text-sm font-medium text-gray-700">{user?.firstName} {user?.lastName}</span>
                 <span className="text-xs bg-primary text-white px-2 py-1 rounded-full">Admin</span>
               </div>
             </div>

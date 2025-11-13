@@ -1,4 +1,4 @@
-import { Link, useLocation, Outlet } from 'react-router-dom';
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { 
@@ -8,10 +8,7 @@ import {
   Settings, 
   Plus,
   TrendingUp,
-  Users,
-  Eye,
   ArrowUpRight,
-  Flag,
   Menu,
   X,
   Package,
@@ -20,28 +17,33 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { mockAds } from '../data/mockData';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { productService } from '../services/productService';
+import type { Product } from '../interfaces/product';
+import config from '../config';
 
 const Dashboard = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   const { getUnreadCount } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [recentProducts, setRecentProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home },
-    // { name: 'My Items', href: '/dashboard/ads', icon: ShoppingBag },
-    { name: 'Items', href: '/dashboard/products', icon: Package },
-    { name: 'Addresses', href: '/dashboard/addresses', icon: MapPin },
-    { name: 'Messages', href: '/dashboard/messages', icon: MessageCircle },
-    { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
     ...(isAdmin ? [
-      { name: 'Users', href: '/dashboard/admin/users', icon: Users },
-      { name: 'Reports', href: '/dashboard/admin/reports', icon: Flag },
-    ] : []),
+      { name: 'All Products', href: '/dashboard/admin/products', icon: ShoppingBag },
+      // { name: 'Users', href: '/dashboard/admin/users', icon: Users },
+    ] : [
+      { name: 'Dashboard', href: '/dashboard', icon: Home },
+      { name: 'Items', href: '/dashboard/products', icon: Package },
+      { name: 'Addresses', href: '/dashboard/addresses', icon: MapPin },
+      { name: 'Messages', href: '/dashboard/messages', icon: MessageCircle },
+      { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
+      { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+    ]),
   ];
 
   const stats = [
@@ -51,14 +53,54 @@ const Dashboard = () => {
     { name: 'Community Impact', value: '189', change: '+23', changeType: 'positive' },
   ];
 
-  const recentActivity = [
-    { id: 1, type: 'view', message: 'Your Vintage Guitar item received 12 new views', time: '1 hour ago' },
-    { id: 2, type: 'view', message: 'Your MacBook Pro item received 8 new views', time: '3 hours ago' },
-    { id: 3, type: 'view', message: 'Your Camera item received 5 new views', time: '5 hours ago' },
-    { id: 4, type: 'view', message: 'Your Watch item received 3 new views', time: '7 hours ago' },
-  ];
-
   const isActive = (path: string) => location.pathname === path;
+
+  // Fetch recent products for regular users
+  useEffect(() => {
+    const fetchRecentProducts = async () => {
+      if (isAdmin || !user) return; // Don't fetch for admins or if not logged in
+      
+      try {
+        setIsLoadingProducts(true);
+        const response = await productService.getProducts();
+        
+        // Handle different response formats (same logic as Products.tsx)
+        let productArray: Product[] = [];
+        
+        if (Array.isArray(response)) {
+          productArray = response;
+        } else if (response && typeof response === 'object') {
+          const res = response as any;
+          if ('data' in res && res.data && typeof res.data === 'object') {
+            if ('products' in res.data && Array.isArray(res.data.products)) {
+              productArray = res.data.products as Product[];
+            } else if (Array.isArray(res.data)) {
+              productArray = res.data as Product[];
+            }
+          } else if ('products' in res && Array.isArray(res.products)) {
+            productArray = res.products as Product[];
+          }
+        }
+        
+        // Get only the 5 most recent products
+        setRecentProducts(productArray.slice(0, 5));
+      } catch (error) {
+        console.error('Error loading recent products:', error);
+        setRecentProducts([]);
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    };
+
+    fetchRecentProducts();
+  }, [isAdmin, user]);
+
+  // Redirect admins to product listing page
+  useEffect(() => {
+    if (isAdmin && location.pathname === '/dashboard') {
+      navigate('/dashboard/admin/products', { replace: true });
+    }
+  }, [isAdmin, location.pathname, navigate]);
 
   // Close sidebar on route change
   useEffect(() => {
@@ -125,14 +167,16 @@ const Dashboard = () => {
             ))}
           </div>
           
-          <div className="mt-6">
-            <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-              <Link to="/dashboard/create-product" className="flex flex-row items-center justify-center">
-                <Plus className="mr-2 h-4 w-4" />
-                Post Your Item
-              </Link>
-            </Button>
-          </div>
+          {!isAdmin && (
+            <div className="mt-6">
+              <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                <Link to="/dashboard/create-product" className="flex flex-row items-center justify-center">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Post Your Item
+                </Link>
+              </Button>
+            </div>
+          )}
         </nav>
       </motion.div>
 
@@ -193,7 +237,7 @@ const Dashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Recent Activity */}
+              {/* Your Recent Items */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -202,36 +246,76 @@ const Dashboard = () => {
               >
                 <Card className="border-0 shadow-lg">
                   <CardHeader>
-                    <CardTitle className="text-xl font-semibold">Recent Activity</CardTitle>
-                    <CardDescription className="text-gray-500 dark:text-gray-400">Your latest interactions and updates</CardDescription>
+                    <CardTitle className="text-xl font-semibold">Your Recent Items</CardTitle>
+                    <CardDescription className="text-gray-500 dark:text-gray-400">Latest items you've posted</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      {recentActivity.map((activity, index) => (
-                        <motion.div
-                          key={activity.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.1 }}
-                          className="flex items-start gap-4 p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
-                        >
-                          <div className="flex-shrink-0">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                              <Eye className="h-5 w-5 text-white" />
+                    {isLoadingProducts ? (
+                      <div className="space-y-3">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="flex items-center gap-3 p-3">
+                            <div className="h-16 w-16 rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                            <div className="flex-1 space-y-2">
+                              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
+                              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/2" />
                             </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{activity.message}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{activity.time}</p>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                    <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <Button variant="outline" className="w-full">
-                        View All Activity
-                      </Button>
-                    </div>
+                        ))}
+                      </div>
+                    ) : recentProducts.length === 0 ? (
+                      <div className="py-12 text-center">
+                        <Package className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                        <p className="text-gray-500 dark:text-gray-400">No items yet</p>
+                        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Start by posting your first item</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-3">
+                          {recentProducts.map((product, index) => {
+                            const imageUrl = product.media && product.media.length > 0
+                              ? (typeof product.media[0] === 'string'
+                                  ? product.media[0]
+                                  : (product.media[0] as any)?.mediaUrl || '')
+                              : '/icons/product_placeholder.jpg';
+                            const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `${config.api.mediaUrl}${imageUrl}`;
+                            
+                            return (
+                              <motion.div
+                                key={product.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.3, delay: index * 0.1 }}
+                                className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                                onClick={() => navigate(`/product/${product.id}`)}
+                              >
+                                <img
+                                  src={fullImageUrl}
+                                  alt={product.name}
+                                  className="h-16 w-16 rounded-lg object-cover ring-2 ring-gray-200 dark:ring-gray-700 group-hover:ring-blue-500 transition-all"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = '/icons/product_placeholder.jpg';
+                                  }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{product.name}</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    ${product.price}
+                                  </p>
+                                </div>
+                                <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <ArrowUpRight className="h-4 w-4" />
+                                </Button>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                          <Button asChild variant="outline" className="w-full">
+                            <Link to="/dashboard/products">View All Items</Link>
+                          </Button>
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               </motion.div>
@@ -248,12 +332,14 @@ const Dashboard = () => {
                     <CardDescription className="text-gray-500 dark:text-gray-400">Common tasks and shortcuts</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    <Button asChild className="w-full justify-start bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                      <Link to="/dashboard/create-product" className="flex flex-row items-center justify-center">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Post Your Item
-                      </Link>
-                    </Button>
+                    {!isAdmin && (
+                      <Button asChild className="w-full justify-start bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                        <Link to="/dashboard/create-product" className="flex flex-row items-center justify-center">
+                          <Plus className="mr-2 h-4 w-4" />
+                          Post Your Item
+                        </Link>
+                      </Button>
+                    )}
                     <Button asChild variant="outline" className="w-full justify-start">
                       <Link to="/explore">
                         <ShoppingBag className="mr-2 h-4 w-4" />
@@ -261,44 +347,11 @@ const Dashboard = () => {
                       </Link>
                     </Button>
                     <Button asChild variant="outline" className="w-full justify-start">
-                      <Link to="/settings">
+                      <Link to="/dashboard/settings">
                         <Settings className="mr-2 h-4 w-4" />
                         Account Settings
                       </Link>
                     </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Recent Items */}
-                <Card className="mt-6 border-0 shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="text-xl font-semibold">Your Recent Items</CardTitle>
-                    <CardDescription className="text-gray-500 dark:text-gray-400">Latest items you've posted</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {mockAds.slice(0, 3).map((ad) => (
-                        <div key={ad.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group cursor-pointer">
-                          <img
-                            src={ad.images[0]}
-                            alt={ad.title}
-                            className="h-14 w-14 rounded-lg object-cover ring-2 ring-gray-200 dark:ring-gray-700 group-hover:ring-blue-500 transition-all"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{ad.title}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">${ad.price} • {ad.views} views</p>
-                          </div>
-                          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <ArrowUpRight className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <Button variant="outline" className="w-full">
-                        View All Items
-                      </Button>
-                    </div>
                   </CardContent>
                 </Card>
               </motion.div>

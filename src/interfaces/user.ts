@@ -7,6 +7,6 @@ export interface User {
   latitude?: number;
   longitude?: number;
   createdAt: string;
-  role: 'user';
+  role: 'user' | 'admin';
   isBlocked?: boolean;
 }
