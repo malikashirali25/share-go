@@ -109,7 +109,7 @@ class NotificationService {
   async markAsRead(notificationId: number): Promise<{ success: boolean; message: string }> {
     const token = localStorage.getItem('sharego_token');
     const response = await fetch(`${this.baseUrl}/notifications/${notificationId}/read`, {
-      method: 'PATCH',
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
@@ -122,6 +122,28 @@ class NotificationService {
 
     if (!response.ok) {
       const message = data?.message || 'Failed to mark notification as read';
+      throw new Error(message);
+    }
+
+    return data;
+  }
+
+  async markAllAsRead(): Promise<{ success: boolean; message: string }> {
+    const token = localStorage.getItem('sharego_token');
+    const response = await fetch(`${this.baseUrl}/notifications/mark-all-read`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      credentials: 'include',
+      mode: 'cors',
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const message = data?.message || 'Failed to mark all notifications as read';
       throw new Error(message);
     }
 
