@@ -8,6 +8,7 @@ import type {
   PublicProductDetailResponse,
   ProductViewResponse,
   ProductReportsResponse,
+  ReportListingResponse,
 } from '../interfaces/product';
 
 class ProductService {
@@ -339,6 +340,46 @@ class ProductService {
         productId,
         ...(message && { message })
       }),
+    });
+  }
+
+  // Get all reports listing (for admin)
+  async getReportsListing(params?: {
+    page?: number;
+    limit?: number;
+    status?: number;
+  }): Promise<ReportListingResponse> {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.page) {
+      queryParams.append('page', params.page.toString());
+    }
+    if (params?.limit) {
+      queryParams.append('limit', params.limit.toString());
+    }
+    if (params?.status !== undefined && params?.status !== null) {
+      queryParams.append('status', params.status.toString());
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/products/admin/reports${queryString ? `?${queryString}` : ''}`;
+    
+    return this.request<ReportListingResponse>(endpoint);
+  }
+
+  // Deactivate a product (set status to 0)
+  async deactivateProduct(productId: number): Promise<Product> {
+    return this.request<Product>(`/products/${productId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 0 }),
+    });
+  }
+
+  // Update report (admin)
+  async updateReport(reportId: number, data: { status: number; notes?: string }): Promise<any> {
+    return this.request<any>(`/products/admin/reports/${reportId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
     });
   }
 }

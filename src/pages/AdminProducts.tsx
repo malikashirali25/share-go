@@ -378,12 +378,10 @@ const AdminProducts = () => {
                     >
                       {product.status === 1 ? (
                         <>
-                          <ToggleRight className="h-4 w-4 mr-1" />
                           Deactivate
                         </>
                       ) : product.status === 0 ? (
                         <>
-                          <ToggleLeft className="h-4 w-4 mr-1" />
                           Activate
                         </>
                       ) : (

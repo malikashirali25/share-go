@@ -162,3 +162,46 @@ export interface ProductReportsResponse {
   };
   total: number;
 }
+
+// Reports listing response (GET /products/reports)
+export interface ReportListingUser {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  image?: string;
+}
+
+export interface ReportListingProduct {
+  id: number;
+  name: string;
+  nameSlug: string;
+  image: string;
+  price: number;
+  status: number;
+}
+
+export interface ReportListingItem {
+  id: number;
+  message: string;
+  status: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  user: ReportListingUser;
+  product: ReportListingProduct;
+}
+
+export interface ReportListingResponse {
+  message: string;
+  status: boolean;
+  data: {
+    reports: ReportListingItem[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    pendingReportsCount: number;
+    resolvedReportsCount: number;
+  };
+}

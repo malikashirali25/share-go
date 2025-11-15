@@ -13,7 +13,8 @@ import {
   X,
   Package,
   MapPin,
-  MessageCircle
+  MessageCircle,
+  Flag
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -35,6 +36,7 @@ const Dashboard = () => {
   const navigation = [
     ...(isAdmin ? [
       { name: 'All Products', href: '/dashboard/admin/products', icon: ShoppingBag },
+      { name: 'Reports', href: '/dashboard/admin/reports', icon: Flag },
       // { name: 'Users', href: '/dashboard/admin/users', icon: Users },
     ] : [
       { name: 'Dashboard', href: '/dashboard', icon: Home },
