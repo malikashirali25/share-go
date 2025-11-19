@@ -38,6 +38,7 @@ import Products from './pages/Products';
 import Addresses from './pages/Addresses';
 import AdminProducts from './pages/AdminProducts';
 import Reports from './pages/Reports';
+import Users from './pages/Users';
 
 const AppContent = () => {
   const { isOffline } = useNetworkStatus();
@@ -100,6 +101,7 @@ const AppContent = () => {
               <Route path="update-password" element={<UpdatePasswordPage />} />
               <Route path="admin/products" element={<AdminProducts />} />
               <Route path="admin/reports" element={<Reports />} />
+              <Route path="admin/users" element={<Users />} />
             </Route>
             <Route path="/share-item" element={
               <ProtectedRoute>
