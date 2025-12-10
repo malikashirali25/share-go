@@ -105,6 +105,11 @@ class ChatService {
   async getUnreadCount(): Promise<UnreadCountResponse> {
     return this.request<UnreadCountResponse>('/chat/unread-count');
   }
+
+  // Get online status for chat partners
+  async getOnlineStatus(): Promise<{ status: boolean; data: { onlineStatus: Record<number, boolean> } }> {
+    return this.request<{ status: boolean; data: { onlineStatus: Record<number, boolean> } }>('/chat/online-status');
+  }
 }
 
 export const chatService = new ChatService(config.api.baseUrl);

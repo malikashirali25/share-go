@@ -58,13 +58,15 @@ export const useChat = (chatId: number | null): UseChatReturn => {
           // Check if message already exists (avoid duplicates)
           const exists = prev.some((msg) => msg.id === data.message.id);
           if (exists) return prev;
+          // Append new message at the end (messages are sorted oldest to newest)
           return [...prev, data.message];
         });
       }
     };
 
     const handleUserTyping = (data: SocketUserTypingEvent) => {
-      if (data.chatId === chatId && data.userId !== user?.id) {
+      const currentUserId = user?.id ? Number.parseInt(user.id, 10) : null;
+      if (data.chatId === chatId && data.userId !== currentUserId) {
         setTyping(data.isTyping);
         typingUserIdRef.current = data.userId;
         
@@ -120,13 +122,19 @@ export const useChat = (chatId: number | null): UseChatReturn => {
         const response = await chatService.getMessages(chatId, page, 50);
         
         if (response.status && response.data) {
-          // Reverse messages to show newest at bottom (API returns newest first)
-          const sortedMessages = [...response.data.messages].reverse();
+          // Sort messages by createdAt ascending (oldest to newest)
+          // This ensures consistent ordering regardless of backend order
+          const sortedMessages = [...response.data.messages].sort((a, b) => {
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
+            return dateA - dateB;
+          });
           
           if (page === 1) {
+            // First page: replace all messages
             setMessages(sortedMessages);
           } else {
-            // Prepend older messages when loading more
+            // Subsequent pages: prepend older messages
             setMessages((prev) => [...sortedMessages, ...prev]);
           }
           

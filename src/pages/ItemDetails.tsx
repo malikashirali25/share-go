@@ -28,6 +28,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import MapComponent from '../components/MapComponent';
 import RatingSystem from '../components/RatingSystem';
 import { useAuth } from '../contexts/AuthContext';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import UserAvatar from '../components/UserAvatar';
 import { productService } from '../services/productService';
 import { chatService } from '../services/chatService';
@@ -38,6 +39,7 @@ const ItemDetails = () => {
   const { id, nameSlug } = useParams();
   const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
+  const { isUserOnline } = useOnlineStatus();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorited, setIsFavorited] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -614,7 +616,6 @@ const ItemDetails = () => {
                     className="w-full"
                     size="lg"
                     onClick={handleContactSeller}
-                    disabled={!isLoggedIn}
                   >
                     {!isLoggedIn ? (
                       <>
@@ -639,19 +640,36 @@ const ItemDetails = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-3 mb-4">
-                  <UserAvatar
-                    src={
-                      seller.image?.startsWith('http')
-                        ? seller.image
-                        : `${config.api.mediaUrl}${seller.image}`
-                    }
-                    alt={`${seller.firstName} ${seller.lastName}`}
-                    className="h-12 w-12 rounded-full"
-                  />
+                  <div className="relative">
+                    <UserAvatar
+                      src={
+                        seller.image?.startsWith('http')
+                          ? seller.image
+                          : `${config.api.mediaUrl}${seller.image}`
+                      }
+                      alt={`${seller.firstName} ${seller.lastName}`}
+                      className="h-12 w-12 rounded-full"
+                    />
+                    {isLoggedIn && isUserOnline(seller.id) && (
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                    )}
+                  </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 capitalize">
                       {seller.firstName} {seller.lastName}
                     </h3>
+                    {isLoggedIn && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {isUserOnline(seller.id) ? (
+                          <span className="flex items-center gap-1">
+                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            Online
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">Offline</span>
+                        )}
+                      </p>
+                    )}
                   </div>
                 </div>
                 

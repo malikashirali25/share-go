@@ -82,6 +82,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       setConnected(false);
     });
 
+    // Listen for online status changes (for debugging)
+    newSocket.on('userOnlineStatusChanged', (data) => {
+      console.log('User online status changed:', data);
+    });
+
     setSocket(newSocket);
 
     return () => {

@@ -15,6 +15,7 @@ import { Card, CardContent } from '../components/ui/card';
 import { useAuth } from '../contexts/AuthContext';
 import { useSocket } from '../contexts/SocketContext';
 import { useChat } from '../hooks/useChat';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { chatService } from '../services/chatService';
 import { Chat, ChatUser, ChatProduct } from '../interfaces/chat';
 import UserAvatar from '../components/UserAvatar';
@@ -35,6 +36,7 @@ const Messages = () => {
 
   const { user: currentUser } = useAuth();
   const { connected } = useSocket();
+  const { isUserOnline } = useOnlineStatus();
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -340,7 +342,7 @@ const Messages = () => {
                                 alt={productName}
                                 className="h-12 w-12 rounded-full"
                               />
-                              {connected && (
+                              {other && isUserOnline(other.id) && (
                                 <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
                               )}
                             </div>
@@ -411,6 +413,9 @@ const Messages = () => {
                           alt={selectedChat.product?.name || 'Product'}
                           className="h-10 w-10 rounded-full"
                         />
+                        {otherUser && isUserOnline(otherUser.id) && (
+                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
+                        )}
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900 dark:text-gray-100">
@@ -418,7 +423,7 @@ const Messages = () => {
                         </h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           <span className="text-xs uppercase tracking-wide">
-                            {chatConnected ? 'Online' : 'Offline'}
+                            {isUserOnline(otherUser.id) ? 'Online' : 'Offline'}
                           </span>
                         </p>
                       </div>

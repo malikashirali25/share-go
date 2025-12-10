@@ -4,9 +4,11 @@ interface UserAvatarProps {
   src?: string;
   alt: string;
   className?: string;
+  showOnlineStatus?: boolean;
+  isOnline?: boolean;
 }
 
-const UserAvatar = ({ src, alt, className = '' }: UserAvatarProps) => {
+const UserAvatar = ({ src, alt, className = '', showOnlineStatus = false, isOnline = false }: UserAvatarProps) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -58,6 +60,9 @@ const UserAvatar = ({ src, alt, className = '' }: UserAvatarProps) => {
         <div className={`absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold`}>
           <span className={textSize}>{initials}</span>
         </div>
+      )}
+      {showOnlineStatus && isOnline && (
+        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
       )}
     </div>
   );
