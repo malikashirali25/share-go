@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Mail, AlertCircle } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -15,7 +15,6 @@ const ForgotPasswordPage = () => {
   
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
 
   // Check if user is admin from location state
@@ -27,69 +26,15 @@ const ForgotPasswordPage = () => {
     setError('');
 
     try {
-      await sendPasswordResetEmail(email);
-      setIsSuccess(true);
+      const response = await sendPasswordResetEmail(email);
+      // Navigate to OTP verification page with userId and email
+      navigate(`/verify-otp?userId=${response.userId}&email=${encodeURIComponent(email)}&type=reset`);
     } catch (err) {
-      setError('Failed to send reset email. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to send reset OTP. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
-
-  if (isSuccess) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="max-w-md w-full"
-        >
-          <Card>
-            <CardContent className="p-8 text-center">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                className="mb-6"
-              >
-                <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
-              </motion.div>
-              
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Check Your Email
-              </h2>
-              
-              <p className="text-gray-600 mb-6">
-                We've sent a password reset link to <strong>{email}</strong>
-              </p>
-              
-              <p className="text-sm text-gray-500 mb-6">
-                Didn't receive the email? Check your spam folder or try again.
-              </p>
-              
-              <div className="space-y-3">
-                <Button 
-                  onClick={() => setIsSuccess(false)}
-                  variant="outline" 
-                  className="w-full"
-                >
-                  Try Different Email
-                </Button>
-                
-                <Button 
-                  onClick={() => navigate(isAdmin ? '/admin/login' : '/login')}
-                  className="w-full"
-                >
-                  Back to Login
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -116,7 +61,7 @@ const ForgotPasswordPage = () => {
                 Forgot Password?
               </CardTitle>
               <CardDescription className="mt-2">
-                {isAdmin ? 'Admin' : 'User'} - Enter your email to receive a reset link
+                {isAdmin ? 'Admin' : 'User'} - Enter your email to receive a 4-digit OTP code
               </CardDescription>
             </div>
           </CardHeader>
@@ -159,10 +104,10 @@ const ForgotPasswordPage = () => {
                 {isLoading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Sending...
+                    Sending OTP...
                   </>
                 ) : (
-                  'Send Reset Link'
+                  'Send OTP Code'
                 )}
               </Button>
             </form>

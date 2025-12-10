@@ -49,7 +49,7 @@ const UpdatePasswordPage = () => {
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      setError('Failed to update password. Please check your current password.');
+      setError(err instanceof Error ? err.message : 'Failed to update password. Please check your current password.');
     } finally {
       setIsLoading(false);
     }

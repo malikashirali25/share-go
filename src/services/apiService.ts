@@ -9,6 +9,12 @@ import type {
   VerifyOTPResponse,
   ResendOTPRequest,
   ResendOTPResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
+  UpdatePasswordRequest,
+  UpdatePasswordResponse,
   ApiError
 } from '../interfaces';
 
@@ -92,6 +98,28 @@ class ApiService {
     return this.request<ResendOTPResponse>('/auth/resend-otp', {
       method: 'POST',
       body: JSON.stringify(userData),
+    });
+  }
+
+  // Password Management APIs
+  async forgotPassword(data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
+    return this.request<ForgotPasswordResponse>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async resetPassword(data: ResetPasswordRequest): Promise<ResetPasswordResponse> {
+    return this.request<ResetPasswordResponse>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updatePassword(data: UpdatePasswordRequest): Promise<UpdatePasswordResponse> {
+    return this.request<UpdatePasswordResponse>('/auth/update-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
 

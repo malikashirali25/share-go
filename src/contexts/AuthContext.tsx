@@ -10,8 +10,8 @@ interface AuthContextType {
   signup: (userData: SignupRequest) => Promise<any>;
   logout: () => void;
   isAdmin: boolean;
-  sendPasswordResetEmail: (email: string) => Promise<void>;
-  resetPassword: (token: string, email: string, newPassword: string) => Promise<void>;
+  sendPasswordResetEmail: (email: string) => Promise<{ userId: number }>;
+  resetPassword: (userId: number, otp: string, newPassword: string) => Promise<void>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   verifyOTP: (userId: number, otp: string) => Promise<any>;
   resendOTP: (userId: number) => Promise<void>;
@@ -144,22 +144,80 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Password reset functionality
-  const sendPasswordResetEmail = async (email: string): Promise<void> => {
-    // TODO: Replace with actual API call
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-    console.log('Password reset email sent to:', email);
+  const sendPasswordResetEmail = async (email: string): Promise<{ userId: number }> => {
+    try {
+      const response = await apiService.forgotPassword({ email });
+      
+      if (response.status && response.data) {
+        return { userId: response.data.userId };
+      }
+      
+      throw new Error(response.message || 'Failed to send reset OTP');
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      const apiError = error as ApiError;
+      
+      if (apiError.status === 404) {
+        throw new Error('No account found with this email address.');
+      } else if (apiError.status === 0) {
+        throw new Error('Cannot connect to server. Please check your internet connection.');
+      } else {
+        throw new Error(apiError.message || 'Failed to send reset OTP. Please try again.');
+      }
+    }
   };
 
-  const resetPassword = async (token: string, email: string, newPassword: string): Promise<void> => {
-    // TODO: Replace with actual API call
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-    console.log('Password reset for:', email, 'with token:', token);
+  const resetPassword = async (userId: number, otp: string, newPassword: string): Promise<void> => {
+    try {
+      const response = await apiService.resetPassword({ userId, otp, newPassword });
+      
+      if (response.status) {
+        return; // Success
+      }
+      
+      throw new Error(response.message || 'Failed to reset password');
+    } catch (error) {
+      console.error('Reset password error:', error);
+      const apiError = error as ApiError;
+      
+      if (apiError.status === 400) {
+        throw new Error('Invalid OTP or OTP expired. Please try again.');
+      } else if (apiError.status === 404) {
+        throw new Error('User not found.');
+      } else if (apiError.status === 0) {
+        throw new Error('Cannot connect to server. Please check your internet connection.');
+      } else {
+        throw new Error(apiError.message || 'Failed to reset password. Please try again.');
+      }
+    }
   };
 
   const updatePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
-    // TODO: Replace with actual API call
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-    console.log('Password updated for user:', user?.email);
+    try {
+      const response = await apiService.updatePassword({ 
+        oldPassword: currentPassword, 
+        newPassword 
+      });
+      
+      if (response.status) {
+        return; // Success
+      }
+      
+      throw new Error(response.message || 'Failed to update password');
+    } catch (error) {
+      console.error('Update password error:', error);
+      const apiError = error as ApiError;
+      
+      if (apiError.status === 400) {
+        throw new Error('Current password is incorrect.');
+      } else if (apiError.status === 401) {
+        throw new Error('You must be logged in to update your password.');
+      } else if (apiError.status === 0) {
+        throw new Error('Cannot connect to server. Please check your internet connection.');
+      } else {
+        throw new Error(apiError.message || 'Failed to update password. Please try again.');
+      }
+    }
   };
 
   // OTP functionality

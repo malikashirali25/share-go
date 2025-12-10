@@ -57,9 +57,11 @@ const SearchableSelect = React.forwardRef<HTMLDivElement, SearchableSelectProps>
     );
 
     // Group options by their group property
+    // Keep ungrouped items (like "All Locations") separate at the top
     const groupedOptions = grouped
       ? filteredOptions.reduce((acc, option) => {
-          const group = option.group || "Other";
+          // Items without a group go to a special "" key that will be rendered first without a header
+          const group = option.group || "";
           if (!acc[group]) {
             acc[group] = [];
           }
@@ -67,6 +69,13 @@ const SearchableSelect = React.forwardRef<HTMLDivElement, SearchableSelectProps>
           return acc;
         }, {} as Record<string, SearchableSelectOption[]>)
       : { "": filteredOptions };
+    
+    // Sort the groups so empty group (ungrouped items) comes first, then alphabetical
+    const sortedGroupKeys = Object.keys(groupedOptions).sort((a, b) => {
+      if (a === "") return -1;
+      if (b === "") return 1;
+      return a.localeCompare(b);
+    });
 
     // Get selected option label
     const selectedOption = options.find(opt => opt.value === value);
@@ -141,34 +150,39 @@ const SearchableSelect = React.forwardRef<HTMLDivElement, SearchableSelectProps>
 
             {/* Options List */}
             <div className="overflow-y-auto max-h-80">
-              {Object.keys(groupedOptions).length === 0 ? (
+              {sortedGroupKeys.length === 0 ? (
                 <div className="px-4 py-8 text-center text-slate-500 dark:text-slate-400 text-sm">
                   No results found
                 </div>
               ) : (
-                Object.entries(groupedOptions).map(([group, groupOptions]) => (
-                  <div key={group}>
-                    {grouped && group && (
-                      <div className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-50 dark:bg-slate-800/50 sticky top-[65px]">
-                        {group}
-                      </div>
-                    )}
-                    {groupOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => handleSelect(option.value)}
-                        className={cn(
-                          "w-full px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors",
-                          "text-sm text-slate-700 dark:text-slate-300",
-                          value === option.value && "bg-primary/10 text-primary font-medium"
-                        )}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                ))
+                sortedGroupKeys.map((group) => {
+                  const groupOptions = groupedOptions[group];
+                  return (
+                    <div key={group || '_ungrouped'}>
+                      {/* Only show group header if there's a group name */}
+                      {grouped && group && (
+                        <div className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-100 dark:bg-slate-800">
+                          {group}
+                        </div>
+                      )}
+                      {groupOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => handleSelect(option.value)}
+                          className={cn(
+                            "w-full px-4 py-2.5 text-left transition-colors",
+                            "text-sm text-slate-900 dark:text-slate-100",
+                            "hover:bg-slate-100 dark:hover:bg-slate-800",
+                            value === option.value && "bg-slate-100 dark:bg-slate-800 font-medium"
+                          )}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>

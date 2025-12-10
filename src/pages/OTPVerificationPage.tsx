@@ -71,21 +71,23 @@ const OTPVerificationPage = () => {
     setError('');
 
     try {
-      const response = await verifyOTP(userId, otpCode);
-      
-      // Check if user was automatically logged in
-      if (response?.data?.user && response?.data?.accessToken) {
-        // User is now logged in, redirect immediately
-        if (type === 'register') {
-          navigate('/dashboard', { replace: true });
-        } else if (type === 'login') {
-          navigate('/dashboard', { replace: true });
-        } else if (type === 'reset') {
-          navigate(`/reset-password?email=${email}&token=${response.data.accessToken}`, { replace: true });
-        }
+      // For password reset flow, we just verify the OTP and navigate to reset password page
+      if (type === 'reset') {
+        // Just validate the OTP is correct format, then navigate
+        // The actual OTP verification will happen during password reset
+        navigate(`/reset-password?userId=${userId}&otp=${otpCode}&email=${encodeURIComponent(email || '')}`, { replace: true });
       } else {
-        // Show success message for manual navigation
-        setIsSuccess(true);
+        // For login/register, verify OTP and auto-login
+        const response = await verifyOTP(userId, otpCode);
+        
+        // Check if user was automatically logged in
+        if (response?.data?.user && response?.data?.accessToken) {
+          // User is now logged in, redirect immediately
+          navigate('/dashboard', { replace: true });
+        } else {
+          // Show success message for manual navigation
+          setIsSuccess(true);
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid OTP. Please try again.');
@@ -130,11 +132,14 @@ const OTPVerificationPage = () => {
               </motion.div>
               
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Email Verified!
+                {type === 'reset' ? 'Code Verified!' : 'Email Verified!'}
               </h2>
               
               <p className="text-gray-600 mb-6">
-                Your email has been successfully verified. You can now continue.
+                {type === 'reset' 
+                  ? 'Your code has been verified. You can now reset your password.'
+                  : 'Your email has been successfully verified. You can now continue.'
+                }
               </p>
               
               <Button 
@@ -181,10 +186,13 @@ const OTPVerificationPage = () => {
             
             <div className="mt-8">
               <CardTitle className="text-2xl font-bold text-gray-900">
-                Verify Your Phone
+                {type === 'reset' ? 'Verify Your Email' : 'Verify Your Phone'}
               </CardTitle>
               <CardDescription className="mt-2">
-                We've sent a 4-digit code via SMS to your phone number
+                {type === 'reset' 
+                  ? `We've sent a 4-digit code to ${email}`
+                  : "We've sent a 4-digit code via SMS to your phone number"
+                }
               </CardDescription>
             </div>
           </CardHeader>
@@ -235,7 +243,7 @@ const OTPVerificationPage = () => {
                     Verifying...
                   </>
                 ) : (
-                  'Verify Email'
+                  type === 'reset' ? 'Verify & Continue' : 'Verify Code'
                 )}
               </Button>
 

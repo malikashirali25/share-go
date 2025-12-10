@@ -21,14 +21,15 @@ const ResetPasswordPage = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  const token = searchParams.get('token');
+  const userId = Number.parseInt(searchParams.get('userId') || '0');
+  const otp = searchParams.get('otp');
   const email = searchParams.get('email');
 
   useEffect(() => {
-    if (!token || !email) {
+    if (!userId || !otp || !email) {
       navigate('/login');
     }
-  }, [token, email, navigate]);
+  }, [userId, otp, email, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,10 +48,10 @@ const ResetPasswordPage = () => {
     setIsLoading(true);
 
     try {
-      await resetPassword(token!, email!, password);
+      await resetPassword(userId, otp!, password);
       setIsSuccess(true);
     } catch (err) {
-      setError('Failed to reset password. The link may have expired.');
+      setError(err instanceof Error ? err.message : 'Failed to reset password. The OTP may have expired.');
     } finally {
       setIsLoading(false);
     }

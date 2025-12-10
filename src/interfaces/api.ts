@@ -85,3 +85,43 @@ export interface ApiError {
   message: string;
   error?: string;
 }
+
+// Password Management interfaces
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  status: boolean;
+  message: string;
+  data: {
+    userId: number;
+  };
+}
+
+export interface ResetPasswordRequest {
+  userId: number;
+  otp: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  status: boolean;
+  message: string;
+  data: {
+    userId: number;
+  };
+}
+
+export interface UpdatePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface UpdatePasswordResponse {
+  status: boolean;
+  message: string;
+  data: {
+    userId: number;
+  };
+}
