@@ -8,19 +8,23 @@ import {
   ToggleRight,
   Package,
   CheckCircle,
-  Clock
+  Clock,
+  Trash2
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Input } from '../components/ui/input';
+import { useToast } from '../components/ui/toast';
 import { productService } from '../services/productService';
 import ProductReportsModal from '../components/ProductReportsModal';
+import ConfirmDialog from '../components/ConfirmDialog';
 import config from '../config';
 import { useAuth } from '../contexts/AuthContext';
 import type { PublicProduct, ProductCategory } from '../interfaces/product';
 
 const AdminProducts = () => {
   const { user } = useAuth();
+  const toast = useToast();
   const [products, setProducts] = useState<PublicProduct[]>([]);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,6 +46,11 @@ const AdminProducts = () => {
   // Reports Modal
   const [isReportsModalOpen, setIsReportsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<{ id: number; name: string } | null>(null);
+
+  // Delete confirmation dialog state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<{ id: number; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch categories on mount
   useEffect(() => {
@@ -118,12 +127,12 @@ const AdminProducts = () => {
   const handleToggleStatus = async (product: PublicProduct) => {
     // Can't change status if completed
     if (product.status === 2) {
-      alert('Cannot change status of completed products');
+      toast.warning('Cannot Change Status', 'Cannot change status of completed products.');
       return;
     }
 
     if (!user) {
-      alert('User not authenticated');
+      toast.error('Authentication Required', 'You must be logged in to perform this action.');
       return;
     }
 
@@ -134,15 +143,59 @@ const AdminProducts = () => {
       await productService.updateProductStatusAdmin(product.id, newStatus, userId);
       // Refresh the list
       fetchProducts();
+      toast.success(
+        newStatus === 1 ? 'Product Activated' : 'Product Deactivated',
+        `"${product.name}" has been ${newStatus === 1 ? 'activated' : 'deactivated'} successfully.`
+      );
     } catch (err: any) {
       console.error('Failed to update product status:', err);
-      alert(err.message || 'Failed to update product status');
+      toast.error('Failed to Update Status', err.message || 'An error occurred while updating product status.');
     }
   };
 
   const handleViewReports = (product: PublicProduct) => {
     setSelectedProduct({ id: product.id, name: product.name });
     setIsReportsModalOpen(true);
+  };
+
+  const handleDeleteClick = (product: PublicProduct) => {
+    setProductToDelete({ id: product.id, name: product.name });
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!productToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await productService.deleteProduct(productToDelete.id);
+      
+      // Refresh the products list after deletion
+      await fetchProducts();
+      setIsDeleteDialogOpen(false);
+      toast.success('Product Deleted', `"${productToDelete.name}" has been deleted successfully.`);
+      setProductToDelete(null);
+    } catch (err: any) {
+      console.error('Failed to delete product:', err);
+      
+      // Check for common errors
+      let errorMessage = err.message || 'An error occurred while deleting the product.';
+      if (errorMessage.includes('foreign key constraint') || errorMessage.includes('violates')) {
+        errorMessage = 'Cannot delete this product because it has associated data. Please contact support.';
+      } else if (errorMessage.includes('not found') || errorMessage.includes('Not found')) {
+        errorMessage = 'This product was not found. It may have already been deleted.';
+      }
+      
+      toast.error('Failed to Delete Product', errorMessage);
+      setIsDeleteDialogOpen(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteDialogOpen(false);
+    setProductToDelete(null);
   };
 
   const getStatusBadge = (status: number) => {
@@ -183,6 +236,9 @@ const AdminProducts = () => {
 
   return (
     <div className="space-y-6">
+      {/* Toast Notifications */}
+      <toast.ToastContainer />
+
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
@@ -373,7 +429,7 @@ const AdminProducts = () => {
                       size="sm"
                       variant={product.status === 2 ? "outline" : "default"}
                       onClick={() => handleToggleStatus(product)}
-                      disabled={product.status === 2}
+                      disabled={product.status === 2 || isDeleting}
                       title={product.status === 2 ? "Cannot change status of completed products" : "Toggle status"}
                     >
                       {product.status === 1 ? (
@@ -397,9 +453,22 @@ const AdminProducts = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleViewReports(product)}
+                      disabled={isDeleting}
                     >
                       <Flag className="h-4 w-4 mr-1" />
                       Reports
+                    </Button>
+
+                    {/* Delete Button */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDeleteClick(product)}
+                      disabled={isDeleting}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
                     </Button>
                   </div>
                 </div>
@@ -444,6 +513,18 @@ const AdminProducts = () => {
           productName={selectedProduct.name}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Delete Product"
+        message={`Are you sure you want to permanently delete "${productToDelete?.name}"? This action cannot be undone.`}
+        confirmText={isDeleting ? 'Deleting...' : 'Delete Product'}
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 };

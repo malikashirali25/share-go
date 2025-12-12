@@ -11,7 +11,7 @@ import { productService } from '../services/productService';
 import { addressService } from '../services/addressService';
 import config from '../config';
 import type { CreateProductRequest, UpdateProductRequest, ProductCategory } from '../interfaces/product';
-import { ProductStatus } from '../interfaces/product';
+import { ProductStatus, ProductCondition, CONDITION_LABELS } from '../interfaces/product';
 import type { Address, CreateAddressRequest } from '../interfaces/address';
 import { US_STATES, getCitiesByState } from '../data/usLocations';
 
@@ -27,7 +27,8 @@ const CreateProduct = () => {
     addressId: 0,
     price: 0,
     description: '',
-    status: ProductStatus.ACTIVE
+    status: ProductStatus.ACTIVE,
+    condition: ProductCondition.GOOD
   });
 
   const [categories, setCategories] = useState<ProductCategory[]>([]);
@@ -97,7 +98,8 @@ const CreateProduct = () => {
         addressId: product.addressId,
         price: product.price,
         description: product.description,
-        status: product.status
+        status: product.status,
+        condition: product.condition || ProductCondition.GOOD
       });
 
       // Set tags from comma-separated string
@@ -294,7 +296,8 @@ const CreateProduct = () => {
           price: formData.price,
           description: formData.description,
           tags: tags.join(','), // Convert tags array to comma-separated string
-          status: formData.status
+          status: formData.status,
+          condition: formData.condition
         };
 
         console.log('Updating product:', productId, updateData);
@@ -317,7 +320,8 @@ const CreateProduct = () => {
           price: formData.price,
           description: formData.description,
           tags: tags.join(','), // Convert tags array to comma-separated string
-          status: formData.status
+          status: formData.status,
+          condition: formData.condition
         };
 
         // Get product from response (checking for nested data property)
@@ -410,6 +414,25 @@ const CreateProduct = () => {
                     <option value="0">Select a category</option>
                     {categories.map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Condition */}
+                <div className="space-y-2">
+                  <Label htmlFor="condition">Condition *</Label>
+                  <select
+                    id="condition"
+                    name="condition"
+                    value={formData.condition}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
+                  >
+                    {Object.values(ProductCondition).map(condition => (
+                      <option key={condition} value={condition}>
+                        {CONDITION_LABELS[condition]}
+                      </option>
                     ))}
                   </select>
                 </div>

@@ -23,7 +23,8 @@ const SignupPage = () => {
     lastName: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    agreeToTerms: false
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,12 +33,17 @@ const SignupPage = () => {
     setIsLoading(true);
 
     // Validation
+    if (!formData.agreeToTerms) {
+      setError('You must agree to the Terms of Service and Privacy Policy');
+      setIsLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setIsLoading(false);
       return;
     }
-
 
     try {
       const signupData: SignupRequest = {
@@ -290,22 +296,33 @@ const SignupPage = () => {
                 )}
               </div>
 
-              <div className="text-center text-sm text-gray-600">
-                By clicking "Create Account" you agree to our{' '}
-                <Link to="/terms" className="text-primary hover:underline">
-                  Terms of Service
-                </Link>{' '}
-                and{' '}
-                <Link to="/privacy" className="text-primary hover:underline">
-                  Privacy Policy
-                </Link>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="agreeToTerms"
+                  name="agreeToTerms"
+                  checked={formData.agreeToTerms}
+                  onChange={handleInputChange}
+                  required
+                  className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer shrink-0"
+                />
+                <label htmlFor="agreeToTerms" className="text-sm text-gray-600 cursor-pointer leading-tight">
+                  I agree to the{' '}
+                  <Link to="/terms" className="text-primary hover:underline" target="_blank">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link to="/privacy" className="text-primary hover:underline" target="_blank">
+                    Privacy Policy
+                  </Link>
+                </label>
               </div>
 
               <Button
                 type="submit" 
                 className="w-full" 
                 size="lg"
-                disabled={!passwordsMatch || isLoading}
+                disabled={!passwordsMatch || !formData.agreeToTerms || isLoading}
               >
                 {isLoading ? (
                   <>

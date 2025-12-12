@@ -21,7 +21,7 @@ import { Input } from '../components/ui/input';
 import { Card, CardContent } from '../components/ui/card';
 import { SearchableSelect } from '../components/ui/searchable-select';
 import { productService } from '../services/productService';
-import { ProductCategory, PublicProduct } from '../interfaces/product';
+import { ProductCategory, PublicProduct, ProductCondition, CONDITION_LABELS } from '../interfaces/product';
 import { Ad } from '../types';
 import UserAvatar from '../components/UserAvatar';
 import config from '../config';
@@ -46,7 +46,14 @@ const FindItems = () => {
   const [total, setTotal] = useState(0);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const conditions = ['All', 'New', 'Like New', 'Good', 'Fair', 'Poor'];
+  // Condition options for filter dropdown
+  const conditionOptions = [
+    { value: 'All', label: 'All Conditions' },
+    ...Object.values(ProductCondition).map(condition => ({
+      value: condition,
+      label: CONDITION_LABELS[condition]
+    }))
+  ];
   
   // Generate location options with cities grouped by state
   const locationOptions = [
@@ -110,7 +117,7 @@ const FindItems = () => {
       createdAt: product.createdAt,
       status: 'active' as const, // API only returns active products
       views: product.views || 0,
-      condition: 'good' as const, // Default condition as API doesn't provide it
+      condition: product.condition || 'good', // Use condition from API or default to 'good'
       nameSlug: product.nameSlug,
     };
   };
@@ -255,7 +262,7 @@ const FindItems = () => {
 
   // Client-side filtering for condition only (location is now server-side)
   const filteredAds = ads.filter(ad => {
-    const matchesCondition = selectedCondition === 'All' || ad.condition === selectedCondition.toLowerCase().replace(' ', '-');
+    const matchesCondition = selectedCondition === 'All' || ad.condition === selectedCondition;
     return matchesCondition;
   });
 
@@ -633,8 +640,8 @@ const FindItems = () => {
                           onChange={(e) => setSelectedCondition(e.target.value)}
                           className="w-full px-4 py-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 text-slate-900 dark:text-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 hover:border-primary/30 shadow-lg hover:shadow-xl appearance-none cursor-pointer"
                         >
-                          {conditions.map(condition => (
-                            <option key={condition} value={condition}>{condition}</option>
+                          {conditionOptions.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
                           ))}
                         </select>
                         <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
@@ -722,7 +729,7 @@ const FindItems = () => {
                         )}
                         {selectedCondition !== 'All' && (
                           <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300 rounded-full text-xs font-medium">
-                            {selectedCondition}
+                            {CONDITION_LABELS[selectedCondition as ProductCondition] || selectedCondition}
                           </span>
                         )}
                       </motion.div>
@@ -872,14 +879,22 @@ const FindItems = () => {
                           </button>
                         </div>
 
-                      {/* Condition Badge - Commented out */}
-                      {/* <div className="absolute top-4 left-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getConditionColor(ad.condition)}`}>
-                          {ad.condition.replace('-', ' ')}
+                      {/* Condition Badge */}
+                      <div className="absolute top-4 left-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm shadow-lg ${
+                          ad.condition === 'new' 
+                            ? 'bg-green-500 text-white' 
+                            : ad.condition === 'like_new' 
+                              ? 'bg-blue-500 text-white'
+                              : ad.condition === 'good'
+                                ? 'bg-yellow-500 text-white'
+                                : ad.condition === 'fair'
+                                  ? 'bg-orange-500 text-white'
+                                  : 'bg-red-500 text-white'
+                        }`}>
+                          {CONDITION_LABELS[ad.condition as ProductCondition] || 'Good'}
                         </span>
-                      </div> */}
-
-                      {/* Status Badge - Removed */}
+                      </div>
                     </div>
 
                     <CardContent className="p-6">

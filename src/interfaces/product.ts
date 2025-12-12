@@ -5,6 +5,24 @@ export enum ProductStatus {
   COMPLETED = 2,
 }
 
+// Product Condition Enum
+export enum ProductCondition {
+  NEW = 'new',
+  LIKE_NEW = 'like_new',
+  GOOD = 'good',
+  FAIR = 'fair',
+  POOR = 'poor',
+}
+
+// Condition display labels
+export const CONDITION_LABELS: Record<ProductCondition, string> = {
+  [ProductCondition.NEW]: 'New',
+  [ProductCondition.LIKE_NEW]: 'Like New',
+  [ProductCondition.GOOD]: 'Good',
+  [ProductCondition.FAIR]: 'Fair',
+  [ProductCondition.POOR]: 'Poor',
+};
+
 export interface Product {
   id: number;
   name: string;
@@ -14,6 +32,7 @@ export interface Product {
   description: string;
   tags: string;
   status: number;
+  condition?: ProductCondition;
   media?: string[];
   createdAt?: string;
   updatedAt?: string;
@@ -27,6 +46,7 @@ export interface CreateProductRequest {
   description: string;
   tags: string;
   status: number;
+  condition?: ProductCondition;
 }
 
 export interface UpdateProductRequest {
@@ -37,6 +57,7 @@ export interface UpdateProductRequest {
   description?: string;
   tags?: string;
   status?: number;
+  condition?: ProductCondition;
 }
 
 export interface ProductCategory {
@@ -99,6 +120,7 @@ export interface PublicProduct {
   views: number;
   tags: string;
   status: number;
+  condition?: ProductCondition;
   createdAt: string;
   updatedAt: string;
   category: ProductCategory;

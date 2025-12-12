@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   User, 
@@ -12,27 +12,84 @@ import {
   EyeOff,
   Save,
   Upload,
-  Trash2
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { useToast } from '../components/ui/toast';
 import { useAuth } from '../contexts/AuthContext';
+import { userService } from '../services/userService';
+import config from '../config';
 
 const Settings = () => {
   const { user } = useAuth();
+  const toast = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Profile form state
   const [profileData, setProfileData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: '+1 (555) 123-4567',
-    location: user?.location || '',
-    bio: 'I love sharing and discovering great items in my community!'
+    firstName: '',
+    lastName: '',
+    email: '',
+    countryCode: '+1',
+    phoneNumber: '',
+    location: '',
+    bio: 'I love sharing and discovering great items in my community!',
+    image: ''
   });
+
+  // Fetch user profile with address on mount
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        setIsLoading(true);
+        const response = await userService.getUserProfile();
+        
+        if (response.status && response.data) {
+          const { user: userData, address } = response.data;
+          
+          // Build location string from address
+          let locationString = '';
+          if (address) {
+            const parts = [address.city, address.state, address.country].filter(Boolean);
+            locationString = parts.join(', ');
+          }
+          
+          setProfileData({
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            email: userData.email || '',
+            countryCode: userData.countryCode || '+1',
+            phoneNumber: userData.phoneNumber || '',
+            location: locationString,
+            bio: 'I love sharing and discovering great items in my community!',
+            image: userData.image || ''
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+        // Fallback to auth context user data
+        if (user) {
+          setProfileData(prev => ({
+            ...prev,
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
+            email: user.email || ''
+          }));
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
 
   // Notification settings
   const [notificationSettings, setNotificationSettings] = useState({
@@ -68,9 +125,22 @@ const Settings = () => {
     setPrivacySettings(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSaveProfile = () => {
-    console.log('Saving profile:', profileData);
-    // Here you would typically save to backend
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      await userService.updateProfile({
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        countryCode: profileData.countryCode,
+        phoneNumber: profileData.phoneNumber,
+      });
+      toast.success('Profile Updated', 'Your profile has been updated successfully.');
+    } catch (error: any) {
+      console.error('Failed to save profile:', error);
+      toast.error('Failed to Update Profile', error.message || 'An error occurred while saving your profile.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSaveNotifications = () => {
@@ -91,6 +161,9 @@ const Settings = () => {
 
   return (
     <div className="space-y-6">
+      {/* Toast Notifications */}
+      <toast.ToastContainer />
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -153,7 +226,7 @@ const Settings = () => {
                 <div className="flex items-center space-x-4">
                   <div className="relative">
                     <img
-                      src={user?.avatar || "https://i.pravatar.cc/150?img=1"}
+                      src={profileData.image ? (profileData.image.startsWith('http') ? profileData.image : `${config.api.mediaUrl}${profileData.image}`) : "https://i.pravatar.cc/150?img=1"}
                       alt="Profile"
                       className="h-20 w-20 rounded-full object-cover"
                     />
@@ -173,11 +246,21 @@ const Settings = () => {
                 {/* Form Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="firstName">First Name</Label>
                     <Input
-                      id="name"
-                      value={profileData.name}
-                      onChange={(e) => handleProfileChange('name', e.target.value)}
+                      id="firstName"
+                      value={profileData.firstName}
+                      onChange={(e) => handleProfileChange('firstName', e.target.value)}
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      value={profileData.lastName}
+                      onChange={(e) => handleProfileChange('lastName', e.target.value)}
+                      disabled={isLoading}
                     />
                   </div>
                   <div>
@@ -186,24 +269,42 @@ const Settings = () => {
                       id="email"
                       type="email"
                       value={profileData.email}
-                      onChange={(e) => handleProfileChange('email', e.target.value)}
+                      disabled
+                      className="bg-gray-100 cursor-not-allowed"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
                   </div>
                   <div>
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      value={profileData.phone}
-                      onChange={(e) => handleProfileChange('phone', e.target.value)}
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        id="countryCode"
+                        value={profileData.countryCode}
+                        onChange={(e) => handleProfileChange('countryCode', e.target.value)}
+                        className="w-20"
+                        placeholder="+1"
+                        disabled={isLoading}
+                      />
+                      <Input
+                        id="phone"
+                        value={profileData.phoneNumber}
+                        onChange={(e) => handleProfileChange('phoneNumber', e.target.value)}
+                        className="flex-1"
+                        placeholder="1234567890"
+                        disabled={isLoading}
+                      />
+                    </div>
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <Label htmlFor="location">Location</Label>
                     <Input
                       id="location"
                       value={profileData.location}
-                      onChange={(e) => handleProfileChange('location', e.target.value)}
+                      disabled
+                      className="bg-gray-100 cursor-not-allowed"
+                      placeholder="No address set"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Location is managed through your addresses</p>
                   </div>
                 </div>
 
@@ -219,9 +320,18 @@ const Settings = () => {
                   />
                 </div>
 
-                <Button onClick={handleSaveProfile} className="w-full">
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Changes
+                <Button onClick={handleSaveProfile} className="w-full" disabled={isSaving || isLoading}>
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Changes
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>

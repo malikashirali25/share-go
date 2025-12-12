@@ -170,16 +170,60 @@ class ProductService {
 
   // Delete a product
   async deleteProduct(productId: number): Promise<void> {
-    await this.request(`/products/${productId}`, {
+    const url = `${this.baseURL}/products/${productId}`;
+    const token = localStorage.getItem('sharego_token');
+    
+    const response = await fetch(url, {
       method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+      mode: 'cors',
+      credentials: 'include',
     });
+
+    if (!response.ok) {
+      // Try to parse error message if available
+      let errorMessage = 'Failed to delete product';
+      try {
+        const data = await response.json();
+        errorMessage = data.message || errorMessage;
+      } catch {
+        // Response body might be empty, use status text
+        errorMessage = response.statusText || errorMessage;
+      }
+      throw { status: response.status, message: errorMessage };
+    }
+    
+    // Success - don't try to parse empty response
   }
 
   // Delete product media
   async deleteProductMedia(mediaId: number): Promise<void> {
-    await this.request(`/products/media/${mediaId}`, {
+    const url = `${this.baseURL}/products/media/${mediaId}`;
+    const token = localStorage.getItem('sharego_token');
+    
+    const response = await fetch(url, {
       method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+      mode: 'cors',
+      credentials: 'include',
     });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to delete media';
+      try {
+        const data = await response.json();
+        errorMessage = data.message || errorMessage;
+      } catch {
+        errorMessage = response.statusText || errorMessage;
+      }
+      throw { status: response.status, message: errorMessage };
+    }
   }
 
   // Get public products (no authentication required)

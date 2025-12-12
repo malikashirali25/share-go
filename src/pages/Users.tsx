@@ -12,12 +12,14 @@ import {
   AlertCircle,
   Shield,
   ShieldCheck,
-  ShieldOff
+  ShieldOff,
+  Trash2
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { useToast } from '../components/ui/toast';
 import { userService } from '../services/userService';
 import UserAvatar from '../components/UserAvatar';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -25,6 +27,7 @@ import config from '../config';
 import type { UserListingItem } from '../interfaces/user';
 
 const Users = () => {
+  const toast = useToast();
   const [users, setUsers] = useState<UserListingItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,10 +45,15 @@ const Users = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
 
-  // Confirmation dialog state
+  // Confirmation dialog state for status change
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [userToUpdate, setUserToUpdate] = useState<{ id: number; name: string; currentStatus: number } | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Delete confirmation dialog state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<{ id: number; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -115,10 +123,14 @@ const Users = () => {
       // Refresh the users list after status update
       await fetchUsers();
       setIsConfirmDialogOpen(false);
+      toast.success(
+        newStatus === 1 ? 'User Activated' : 'User Deactivated',
+        `${userToUpdate.name} has been ${newStatus === 1 ? 'activated' : 'deactivated'} successfully.`
+      );
       setUserToUpdate(null);
     } catch (err: any) {
       console.error('Failed to update user status:', err);
-      alert(err.message || 'Failed to update user status');
+      toast.error('Failed to Update Status', err.message || 'An error occurred while updating user status.');
     } finally {
       setIsUpdating(false);
     }
@@ -127,6 +139,47 @@ const Users = () => {
   const handleCancelStatusChange = () => {
     setIsConfirmDialogOpen(false);
     setUserToUpdate(null);
+  };
+
+  const handleDeleteClick = (user: UserListingItem) => {
+    setUserToDelete({
+      id: user.id,
+      name: `${user.firstName} ${user.lastName}`,
+    });
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await userService.deleteUser(userToDelete.id);
+      
+      // Refresh the users list after deletion
+      await fetchUsers();
+      setIsDeleteDialogOpen(false);
+      toast.success('User Deleted', `${userToDelete.name} has been deleted successfully.`);
+      setUserToDelete(null);
+    } catch (err: any) {
+      console.error('Failed to delete user:', err);
+      
+      // Check for foreign key constraint error
+      let errorMessage = err.message || 'An error occurred while deleting the user.';
+      if (errorMessage.includes('foreign key constraint') || errorMessage.includes('violates')) {
+        errorMessage = 'Cannot delete this user because they have associated products or data. Please delete their products first.';
+      }
+      
+      toast.error('Failed to Delete User', errorMessage);
+      setIsDeleteDialogOpen(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteDialogOpen(false);
+    setUserToDelete(null);
   };
 
   const getUserImageUrl = (image?: string) => {
@@ -183,6 +236,9 @@ const Users = () => {
 
   return (
     <div className="space-y-6">
+      {/* Toast Notifications */}
+      <toast.ToastContainer />
+
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
@@ -395,27 +451,38 @@ const Users = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      {user.status === 1 ? (
+                      <div className="flex items-center justify-end gap-2">
+                        {user.status === 1 ? (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleStatusChangeClick(user)}
+                            disabled={isUpdating || isDeleting}
+                          >
+                            <ShieldOff className="h-4 w-4 mr-1" />
+                            Deactivate
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => handleStatusChangeClick(user)}
+                            disabled={isUpdating || isDeleting}
+                          >
+                            <ShieldCheck className="h-4 w-4 mr-1" />
+                            Activate
+                          </Button>
+                        )}
                         <Button
-                          variant="destructive"
+                          variant="outline"
                           size="sm"
-                          onClick={() => handleStatusChangeClick(user)}
-                          disabled={isUpdating}
+                          onClick={() => handleDeleteClick(user)}
+                          disabled={isUpdating || isDeleting}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
                         >
-                          <ShieldOff className="h-4 w-4 mr-1" />
-                          Deactivate
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      ) : (
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => handleStatusChangeClick(user)}
-                          disabled={isUpdating}
-                        >
-                          <ShieldCheck className="h-4 w-4 mr-1" />
-                          Activate
-                        </Button>
-                      )}
+                      </div>
                     </td>
                   </motion.tr>
                 ))}
@@ -450,7 +517,7 @@ const Users = () => {
         </div>
       )}
 
-      {/* Confirmation Dialog */}
+      {/* Status Change Confirmation Dialog */}
       <ConfirmDialog
         isOpen={isConfirmDialogOpen}
         onClose={handleCancelStatusChange}
@@ -460,6 +527,18 @@ const Users = () => {
         confirmText={isUpdating ? (userToUpdate?.currentStatus === 1 ? 'Deactivating...' : 'Activating...') : (userToUpdate?.currentStatus === 1 ? 'Deactivate' : 'Activate')}
         cancelText="Cancel"
         variant={userToUpdate?.currentStatus === 1 ? 'danger' : 'default'}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Delete User"
+        message={`Are you sure you want to permanently delete the user "${userToDelete?.name}"? This action cannot be undone.`}
+        confirmText={isDeleting ? 'Deleting...' : 'Delete User'}
+        cancelText="Cancel"
+        variant="danger"
       />
     </div>
   );

@@ -22,7 +22,7 @@ export interface Ad {
   createdAt: string;
   status: 'active' | 'sold' | 'pending' | 'rejected';
   views: number;
-  condition: 'new' | 'like-new' | 'good' | 'fair' | 'poor';
+  condition: 'new' | 'like_new' | 'good' | 'fair' | 'poor';
   nameSlug?: string;
 }
 

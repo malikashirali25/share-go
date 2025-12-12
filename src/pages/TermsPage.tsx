@@ -1,9 +1,12 @@
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, FileText } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 
 const TermsPage = () => {
+  const navigate = useNavigate();
+
   const sections = [
     {
       title: '1. Acceptance of Terms',
@@ -100,7 +103,7 @@ const TermsPage = () => {
           className="mb-8"
         >
           <div className="flex items-center space-x-4 mb-6">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <h1 className="text-3xl font-bold text-gray-900">Terms of Service</h1>

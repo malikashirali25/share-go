@@ -1,6 +1,51 @@
 import config from '../config';
 import type { UserListingResponse } from '../interfaces/user';
 
+// User profile with address response
+export interface UserProfileResponse {
+  status: boolean;
+  message: string;
+  data: {
+    user: {
+      id: number;
+      firstName: string;
+      lastName: string;
+      name: string;
+      email: string;
+      countryCode?: string;
+      phoneNumber?: string;
+      gender?: string;
+      status: number;
+      image?: string;
+      isEmailVerified: boolean;
+      isPhoneVerified: boolean;
+      role: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+    address?: {
+      id: number;
+      userId: number;
+      address1: string;
+      address2?: string;
+      zipcode: string;
+      city: string;
+      state: string;
+      country: string;
+      isDefault: boolean;
+      lat?: number;
+      lng?: number;
+    };
+  };
+}
+
+export interface UpdateProfileRequest {
+  firstName?: string;
+  lastName?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+}
+
 class UserService {
   private readonly baseURL: string;
 
@@ -53,6 +98,19 @@ class UserService {
     }
   }
 
+  // Get current user profile with address
+  async getUserProfile(): Promise<UserProfileResponse> {
+    return this.request<UserProfileResponse>('/users/me');
+  }
+
+  // Update user profile
+  async updateProfile(data: UpdateProfileRequest): Promise<any> {
+    return this.request<any>('/users/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Get users listing (for admin)
   async getUsersListing(params?: {
     page?: number;
@@ -87,6 +145,37 @@ class UserService {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     });
+  }
+
+  // Delete user (admin)
+  async deleteUser(userId: number): Promise<void> {
+    const url = `${this.baseURL}/users/${userId}`;
+    const token = localStorage.getItem('sharego_token');
+    
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+      mode: 'cors',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      // Try to parse error message if available
+      let errorMessage = 'Failed to delete user';
+      try {
+        const data = await response.json();
+        errorMessage = data.message || errorMessage;
+      } catch {
+        // Response body might be empty, use status text
+        errorMessage = response.statusText || errorMessage;
+      }
+      throw { status: response.status, message: errorMessage };
+    }
+    
+    // Success - don't try to parse empty response
   }
 }
 
