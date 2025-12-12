@@ -103,6 +103,22 @@ class UserService {
     return this.request<UserProfileResponse>('/users/me');
   }
 
+  // Get dashboard statistics
+  async getDashboardStats(): Promise<{
+    status: boolean;
+    message: string;
+    data: {
+      totalViews: number;
+      activeItems: number;
+      completedItems: number;
+      totalItems: number;
+      unreadNotifications: number;
+      unreadMessages: number;
+    };
+  }> {
+    return this.request<any>('/users/me/dashboard');
+  }
+
   // Update user profile
   async updateProfile(data: UpdateProfileRequest): Promise<any> {
     return this.request<any>('/users/profile', {

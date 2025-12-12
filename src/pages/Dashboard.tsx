@@ -15,13 +15,18 @@ import {
   MapPin,
   MessageCircle,
   Flag,
-  Users
+  Users,
+  Eye,
+  CheckCircle,
+  BarChart3,
+  Mail
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { productService } from '../services/productService';
+import { userService } from '../services/userService';
 import type { Product } from '../interfaces/product';
 import config from '../config';
 
@@ -33,6 +38,15 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const [stats, setStats] = useState({
+    totalViews: 0,
+    activeItems: 0,
+    completedItems: 0,
+    totalItems: 0,
+    unreadNotifications: 0,
+    unreadMessages: 0
+  });
 
   const navigation = [
     ...(isAdmin ? [
@@ -49,16 +63,39 @@ const Dashboard = () => {
     ]),
   ];
 
-  const stats = [
-    { name: 'Total Views', value: '2,847', change: '+12%', changeType: 'positive' },
-    { name: 'Active Items', value: '8', change: '+2', changeType: 'positive' },
-    { name: 'Completed', value: '24', change: '+5', changeType: 'positive' },
-    { name: 'Community Impact', value: '189', change: '+23', changeType: 'positive' },
-  ];
-
   const isActive = (path: string) => location.pathname === path;
 
-  // Fetch recent products for regular users
+  // Fetch dashboard stats from dedicated endpoint
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      if (isAdmin || !user) return; // Don't fetch for admins or if not logged in
+      
+      try {
+        setIsLoadingStats(true);
+        const response = await userService.getDashboardStats();
+        
+        if (response.status && response.data) {
+          setStats({
+            totalViews: response.data.totalViews || 0,
+            activeItems: response.data.activeItems || 0,
+            completedItems: response.data.completedItems || 0,
+            totalItems: response.data.totalItems || 0,
+            unreadNotifications: response.data.unreadNotifications || 0,
+            unreadMessages: response.data.unreadMessages || 0
+          });
+        }
+      } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+        setStats({ totalViews: 0, activeItems: 0, completedItems: 0, totalItems: 0, unreadNotifications: 0, unreadMessages: 0 });
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    fetchDashboardStats();
+  }, [isAdmin, user]);
+
+  // Fetch recent products for display (only for recent items section)
   useEffect(() => {
     const fetchRecentProducts = async () => {
       if (isAdmin || !user) return; // Don't fetch for admins or if not logged in
@@ -67,7 +104,7 @@ const Dashboard = () => {
         setIsLoadingProducts(true);
         const response = await productService.getProducts();
         
-        // Handle different response formats (same logic as Products.tsx)
+        // Handle different response formats
         let productArray: Product[] = [];
         
         if (Array.isArray(response)) {
@@ -85,7 +122,7 @@ const Dashboard = () => {
           }
         }
         
-        // Get only the 5 most recent products
+        // Get only the 5 most recent products for display
         setRecentProducts(productArray.slice(0, 5));
       } catch (error) {
         console.error('Error loading recent products:', error);
@@ -211,32 +248,45 @@ const Dashboard = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {stats.map((stat, index) => (
-                <motion.div
-                  key={stat.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">{stat.name}</p>
-                          <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {[
+                { name: 'Total Views', value: stats.totalViews.toLocaleString(), icon: Eye, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-100 dark:bg-blue-900/20' },
+                { name: 'Active Items', value: stats.activeItems.toString(), icon: Package, color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-100 dark:bg-green-900/20' },
+                { name: 'Completed', value: stats.completedItems.toString(), icon: CheckCircle, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-100 dark:bg-purple-900/20' },
+                { name: 'Total Items', value: stats.totalItems.toString(), icon: BarChart3, color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-100 dark:bg-orange-900/20' },
+                { name: 'Unread Notifications', value: stats.unreadNotifications.toString(), icon: Bell, color: 'text-red-600 dark:text-red-400', bgColor: 'bg-red-100 dark:bg-red-900/20' },
+                { name: 'Unread Messages', value: stats.unreadMessages.toString(), icon: Mail, color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-100 dark:bg-indigo-900/20' },
+              ].map((stat, index) => {
+                const IconComponent = stat.icon;
+                return (
+                  <motion.div
+                    key={stat.name}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">{stat.name}</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                              {isLoadingStats ? (
+                                <span className="inline-block h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></span>
+                              ) : (
+                                stat.value
+                              )}
+                            </p>
+                          </div>
+                          <div className={`p-3 rounded-lg ${stat.bgColor} ${stat.color}`}>
+                            <IconComponent className="h-6 w-6" />
+                          </div>
                         </div>
-                      </div>
-                      <div className={`flex items-center text-sm font-medium ${
-                        stat.changeType === 'positive' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                      }`}>
-                        <TrendingUp className="h-4 w-4 mr-1" />
-                        {stat.change}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

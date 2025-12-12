@@ -33,6 +33,7 @@ export interface Product {
   tags: string;
   status: number;
   condition?: ProductCondition;
+  views?: number;
   media?: string[];
   createdAt?: string;
   updatedAt?: string;
