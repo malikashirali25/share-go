@@ -9,6 +9,7 @@ import type {
   ProductViewResponse,
   ProductReportsResponse,
   ReportListingResponse,
+  MyReportsResponse,
 } from '../interfaces/product';
 
 class ProductService {
@@ -409,6 +410,30 @@ class ProductService {
     const endpoint = `/products/admin/reports${queryString ? `?${queryString}` : ''}`;
     
     return this.request<ReportListingResponse>(endpoint);
+  }
+
+  // Get user's own reports
+  async getMyReports(params?: {
+    page?: number;
+    limit?: number;
+    status?: number;
+  }): Promise<MyReportsResponse> {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.page) {
+      queryParams.append('page', params.page.toString());
+    }
+    if (params?.limit) {
+      queryParams.append('limit', params.limit.toString());
+    }
+    if (params?.status !== undefined && params?.status !== null) {
+      queryParams.append('status', params.status.toString());
+    }
+
+    const queryString = queryParams.toString();
+    const endpoint = `/products/my-reports${queryString ? `?${queryString}` : ''}`;
+    
+    return this.request<MyReportsResponse>(endpoint);
   }
 
   // Deactivate a product (set status to 0)

@@ -5,6 +5,12 @@ export enum ProductStatus {
   COMPLETED = 2,
 }
 
+// Report Status Enum
+export enum ReportStatus {
+  PENDING = 0,
+  COMPLETED = 1,  // Backend uses "Completed", frontend can display as "Resolved" or "Completed"
+}
+
 // Product Condition Enum
 export enum ProductCondition {
   NEW = 'new',
@@ -226,5 +232,46 @@ export interface ReportListingResponse {
     totalPages: number;
     pendingReportsCount: number;
     resolvedReportsCount: number;
+  };
+}
+
+// User's own reports response (GET /products/my-reports)
+export interface MyReportProductOwner {
+  id: number;
+  firstName: string;
+  lastName: string;
+  image: string | null;
+}
+
+export interface MyReportProduct {
+  id: number;
+  name: string;
+  nameSlug: string;
+  image: string | null;
+  price: string;
+  status: number;
+  owner: MyReportProductOwner | null;
+}
+
+export interface MyReport {
+  id: number;
+  productId: number;
+  message: string | null;
+  status: 0 | 1;  // 0 = Pending, 1 = Completed
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  product: MyReportProduct;
+}
+
+export interface MyReportsResponse {
+  status: boolean;
+  message: string;
+  data: {
+    reports: MyReport[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
   };
 }

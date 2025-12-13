@@ -38,6 +38,7 @@ import Products from './pages/Products';
 import Addresses from './pages/Addresses';
 import AdminProducts from './pages/AdminProducts';
 import Reports from './pages/Reports';
+import MyReports from './pages/MyReports';
 import Users from './pages/Users';
 
 const AppContent = () => {
@@ -97,6 +98,7 @@ const AppContent = () => {
               <Route path="calls" element={<Calls />} />
               <Route path="emails" element={<Emails />} />
               <Route path="notifications" element={<Notifications />} />
+              <Route path="reports" element={<MyReports />} />
               <Route path="settings" element={<Settings />} />
               <Route path="update-password" element={<UpdatePasswordPage />} />
               <Route path="admin/products" element={<AdminProducts />} />

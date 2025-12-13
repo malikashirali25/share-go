@@ -58,6 +58,7 @@ const Dashboard = () => {
       { name: 'Items', href: '/dashboard/products', icon: Package },
       { name: 'Addresses', href: '/dashboard/addresses', icon: MapPin },
       { name: 'Messages', href: '/dashboard/messages', icon: MessageCircle },
+      { name: 'My Reports', href: '/dashboard/reports', icon: Flag },
       { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
       { name: 'Settings', href: '/dashboard/settings', icon: Settings },
     ]),

@@ -21,6 +21,7 @@ import UserAvatar from '../components/UserAvatar';
 import config from '../config';
 import { useAuth } from '../contexts/AuthContext';
 import type { ReportListingItem } from '../interfaces/product';
+import { ProductStatus, ReportStatus } from '../interfaces/product';
 
 const Reports = () => {
   const { user } = useAuth();
@@ -37,13 +38,13 @@ const Reports = () => {
   const limit = 10;
 
   // Filter state
-  const [statusFilter, setStatusFilter] = useState<number | null>(null); // null = all, 0 = pending, 1 = resolved
+  const [statusFilter, setStatusFilter] = useState<number | null>(null); // null = all, ReportStatus.PENDING = 0, ReportStatus.COMPLETED = 1
 
   // Report details modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<ReportListingItem | null>(null);
   const [formData, setFormData] = useState({
-    status: 0,
+    status: ReportStatus.PENDING,
     notes: '',
     deactivateProduct: 'no' as 'yes' | 'no',
   });
@@ -52,6 +53,17 @@ const Reports = () => {
   useEffect(() => {
     fetchReports();
   }, [currentPage, statusFilter]);
+
+  // Debug: Log formData changes
+  useEffect(() => {
+    if (isModalOpen && selectedReport) {
+      console.log('[Reports] formData changed:', {
+        reportId: selectedReport.id,
+        formDataStatus: formData.status,
+        formDataType: typeof formData.status,
+      });
+    }
+  }, [formData, isModalOpen, selectedReport]);
 
   const fetchReports = async () => {
     setIsLoading(true);
@@ -87,8 +99,29 @@ const Reports = () => {
 
   const handleViewDetails = (report: ReportListingItem) => {
     setSelectedReport(report);
+    
+    // Ensure status is a number: ReportStatus.PENDING = 0, ReportStatus.COMPLETED = 1
+    // Handle various input types: number, string, undefined, null
+    let reportStatus = ReportStatus.PENDING; // Default to pending
+    if (report.status !== undefined && report.status !== null) {
+      const statusNum = Number(report.status);
+      // Only accept ReportStatus.PENDING (0) or ReportStatus.COMPLETED (1) as valid status values
+      if (!isNaN(statusNum) && (statusNum === ReportStatus.PENDING || statusNum === ReportStatus.COMPLETED)) {
+        reportStatus = statusNum;
+      }
+    }
+    
+    // Debug: Log the status to help diagnose issues
+    console.log('[Reports] Opening modal for report:', {
+      reportId: report.id,
+      originalStatus: report.status,
+      statusType: typeof report.status,
+      convertedStatus: reportStatus,
+      formDataWillBe: { status: reportStatus, notes: report.notes || '' }
+    });
+    
     setFormData({
-      status: report.status || 0,
+      status: reportStatus,
       notes: report.notes || '',
       deactivateProduct: 'no',
     });
@@ -99,7 +132,7 @@ const Reports = () => {
     setIsModalOpen(false);
     setSelectedReport(null);
     setFormData({
-      status: 0,
+      status: ReportStatus.PENDING,
       notes: '',
       deactivateProduct: 'no',
     });
@@ -111,9 +144,9 @@ const Reports = () => {
     setIsSubmitting(true);
     try {
       // If deactivate product is selected (yes) and product is active, deactivate it first
-      if (formData.deactivateProduct === 'yes' && selectedReport.product.status === 1) {
+      if (formData.deactivateProduct === 'yes' && selectedReport.product.status === ProductStatus.ACTIVE) {
         const userId = Number.parseInt(user.id, 10);
-        await productService.updateProductStatusAdmin(selectedReport.product.id, 0, userId);
+        await productService.updateProductStatusAdmin(selectedReport.product.id, ProductStatus.PENDING, userId);
       }
 
       // Update report
@@ -154,22 +187,53 @@ const Reports = () => {
     });
   };
 
+  // Badge for REPORT status - matches backend enum (0 = Pending, 1 = Completed)
   const getStatusBadge = (status: number) => {
     switch (status) {
-      case 0:
+      case ReportStatus.PENDING:
         return (
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
             Pending
           </span>
         );
-      case 1:
+      case ReportStatus.COMPLETED:
         return (
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-            Resolved
+            Completed
           </span>
         );
       default:
         return null;
+    }
+  };
+
+  // Badge for PRODUCT status - matches Products.tsx styling
+  const getProductStatusBadge = (status: number) => {
+    switch (status) {
+      case ProductStatus.PENDING:
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+            Inactive
+          </span>
+        );
+      case ProductStatus.ACTIVE:
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+            Active
+          </span>
+        );
+      case ProductStatus.COMPLETED:
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+            Completed
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+            Unknown
+          </span>
+        );
     }
   };
 
@@ -225,8 +289,8 @@ const Reports = () => {
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[150px]"
             >
               <option value="all">All Reports</option>
-              <option value="0">Pending</option>
-              <option value="1">Resolved</option>
+              <option value={ReportStatus.PENDING}>Pending</option>
+              <option value={ReportStatus.COMPLETED}>Completed</option>
             </select>
           </div>
         </CardContent>
@@ -373,7 +437,7 @@ const Reports = () => {
                       </p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      {report.status === 0 ? (
+                      {report.status === ReportStatus.PENDING ? (
                         <Button
                           variant="outline"
                           size="sm"
@@ -527,7 +591,7 @@ const Reports = () => {
                           {selectedReport.product.price}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Status: {getStatusBadge(selectedReport.product.status)}
+                          Status: {getProductStatusBadge(selectedReport.product.status)}
                         </p>
                       </div>
                     </div>
@@ -562,12 +626,12 @@ const Reports = () => {
                         <span className="text-sm text-gray-700 dark:text-gray-300">No</span>
                       </label>
                     </div>
-                    {formData.deactivateProduct === 'yes' && selectedReport.product.status === 1 && (
+                    {formData.deactivateProduct === 'yes' && selectedReport.product.status === ProductStatus.ACTIVE && (
                       <p className="text-xs text-red-600 dark:text-red-400 mt-2">
                         The product will be deactivated upon submitting this form.
                       </p>
                     )}
-                    {formData.deactivateProduct === 'yes' && selectedReport.product.status !== 1 && (
+                    {formData.deactivateProduct === 'yes' && selectedReport.product.status !== ProductStatus.ACTIVE && (
                       <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
                         Product is already inactive.
                       </p>
@@ -580,14 +644,21 @@ const Reports = () => {
                       Status
                     </Label>
                     <select
+                      key={`status-${selectedReport.id}-${formData.status}`}
                       id="status"
-                      value={formData.status}
+                      value={String(formData.status)}
                       onChange={(e) => setFormData({ ...formData, status: Number.parseInt(e.target.value, 10) })}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value={0}>Pending</option>
-                      <option value={1}>Resolved</option>
+                      <option value={ReportStatus.PENDING}>Pending</option>
+                      <option value={ReportStatus.COMPLETED}>Completed</option>
                     </select>
+                    {/* Debug: Show current formData status */}
+                    {process.env.NODE_ENV === 'development' && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Debug: formData.status = {formData.status} (type: {typeof formData.status})
+                      </p>
+                    )}
                   </div>
 
                   {/* Notes Textarea */}

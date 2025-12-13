@@ -34,12 +34,14 @@ import { productService } from '../services/productService';
 import { chatService } from '../services/chatService';
 import { PublicProduct } from '../interfaces/product';
 import config from '../config';
+import { useToast } from '../components/ui/toast';
 
 const ItemDetails = () => {
   const { id, nameSlug } = useParams();
   const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
   const { isUserOnline } = useOnlineStatus();
+  const toast = useToast();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorited, setIsFavorited] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -257,11 +259,25 @@ const ItemDetails = () => {
       navigate('/login', { state: { from: { pathname } } });
       return;
     }
+    
+    // Prevent users from reporting their own products
+    if (product && user && product.user.id === Number.parseInt(user.id, 10)) {
+      toast.error('Cannot Report', 'You cannot report your own product.');
+      return;
+    }
+    
     setShowReportModal(true);
   };
 
   const handleSubmitReport = async () => {
     if (!product || isSubmittingReport) return;
+
+    // Safeguard: Prevent users from reporting their own products
+    if (user && product.user.id === Number.parseInt(user.id, 10)) {
+      toast.error('Cannot Report', 'You cannot report your own product.');
+      setShowReportModal(false);
+      return;
+    }
 
     try {
       setIsSubmittingReport(true);
@@ -271,14 +287,14 @@ const ItemDetails = () => {
       await productService.reportProduct(product.id, trimmedMessage || undefined);
       
       // Show success message
-      alert('Report submitted successfully. Thank you for helping keep our community safe.');
+      toast.success('Report Submitted', 'Thank you for helping keep our community safe.');
       
       // Close modal and reset
       setShowReportModal(false);
       setReportMessage('');
     } catch (err: any) {
       console.error('Error submitting report:', err);
-      alert(err.message || 'Failed to submit report. Please try again.');
+      toast.error('Failed to Submit Report', err.message || 'Failed to submit report. Please try again.');
     } finally {
       setIsSubmittingReport(false);
     }
@@ -295,7 +311,7 @@ const ItemDetails = () => {
 
       // Don't allow users to chat with themselves
       if (ownerId === currentUserId) {
-        alert('You cannot contact yourself');
+        toast.error('Cannot Contact Yourself', 'You cannot send a message to yourself.');
         setShowContactModal(false);
         return;
       }
@@ -320,7 +336,7 @@ const ItemDetails = () => {
       }
     } catch (err: any) {
       console.error('Error sending message:', err);
-      alert(err.message || 'Failed to send message. Please try again.');
+      toast.error('Failed to Send Message', err.message || 'Failed to send message. Please try again.');
     } finally {
       setIsSendingMessage(false);
     }
@@ -386,6 +402,9 @@ const ItemDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Toast Notifications */}
+      <toast.ToastContainer />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
@@ -715,19 +734,21 @@ const ItemDetails = () => {
               </CardContent>
             </Card>
 
-            {/* Report */}
-            <Card>
-              <CardContent className="p-4">
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={handleReportProduct}
-                >
-                  <Flag className="mr-2 h-4 w-4" />
-                  Report This Ad
-                </Button>
-              </CardContent>
-            </Card>
+            {/* Report - Only show if user is not the owner */}
+            {product && user && product.user.id !== Number.parseInt(user.id, 10) && (
+              <Card>
+                <CardContent className="p-4">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={handleReportProduct}
+                  >
+                    <Flag className="mr-2 h-4 w-4" />
+                    Report This Ad
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </motion.div>
         </div>
       </div>
