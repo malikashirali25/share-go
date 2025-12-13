@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Package, Edit, Trash2, CheckCircle, Calendar, Search, X } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader } from '../components/ui/card';
+import { useToast } from '../components/ui/toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { productService } from '../services/productService';
 import config from '../config';
@@ -22,6 +23,7 @@ interface ChatHeadUserOption {
 
 const Products = () => {
   const { user: currentUser } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const isItemsPage = location.pathname.includes('/products');
@@ -36,7 +38,7 @@ const Products = () => {
   const [counts, setCounts] = useState({ active: 0, completed: 0 });
   const [dialogState, setDialogState] = useState<{
     isOpen: boolean;
-    type: 'delete' | null;
+    type: 'delete' | 'reactivate' | null;
     productId: number | null;
     productName: string;
   }>({
@@ -317,10 +319,12 @@ const Products = () => {
     try {
       await productService.deleteProduct(dialogState.productId);
       await loadProducts();
+      toast.success('Item Deleted', `"${dialogState.productName}" has been deleted successfully.`);
+      closeDialog();
     } catch (error: any) {
       console.error('Error deleting item:', error);
       const errorMessage = error?.message || error?.error || 'Unknown error occurred';
-      alert(`Failed to delete item: ${errorMessage}. Please try again.`);
+      toast.error('Failed to Delete Item', errorMessage);
     }
   };
 
@@ -347,23 +351,55 @@ const Products = () => {
   };
 
   const handleMarkCompleted = async () => {
-    if (!statusModalState.productId || !selectedChatUserId) {
+    if (!statusModalState.productId) {
       return;
     }
 
     try {
       setIsUpdatingStatus(true);
+      // If no user selected, use current user ID as fallback (product owner)
+      const userId = selectedChatUserId || (currentUser ? Number.parseInt(currentUser.id, 10) : undefined);
       await productService.updateProductStatus(
         statusModalState.productId,
         ProductStatus.COMPLETED,
-        selectedChatUserId
+        userId
       );
       closeStatusModal();
       await loadProducts();
+      toast.success('Item Marked as Completed', 'The item has been successfully marked as completed.');
     } catch (error: any) {
       console.error('Error marking item as completed:', error);
       const errorMessage = error?.message || error?.error || 'Failed to mark item as completed. Please try again.';
-      alert(errorMessage);
+      toast.error('Failed to Mark as Completed', errorMessage);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const openReactivateDialog = (productId: number, productName: string) => {
+    setDialogState({
+      isOpen: true,
+      type: 'reactivate',
+      productId,
+      productName
+    });
+  };
+
+  const handleReactivate = async () => {
+    if (!dialogState.productId || !currentUser) return;
+
+    try {
+      setIsUpdatingStatus(true);
+      // Pass current user ID (product owner) for reactivation
+      const userId = Number.parseInt(currentUser.id, 10);
+      await productService.updateProductStatus(dialogState.productId, ProductStatus.ACTIVE, userId);
+      await loadProducts();
+      toast.success('Item Reactivated', `"${dialogState.productName}" has been reactivated and is now listed as active.`);
+      closeDialog();
+    } catch (error: any) {
+      console.error('Error reactivating item:', error);
+      const errorMessage = error?.message || error?.error || 'Failed to reactivate item. Please try again.';
+      toast.error('Failed to Reactivate Item', errorMessage);
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -390,7 +426,7 @@ const Products = () => {
   });
   const userSearchInputId = 'status-user-search';
   const emptyUserMessage = chatUsers.length === 0
-    ? 'No conversations found for this item yet.'
+    ? 'No conversations found for this item. You can still mark it as completed without selecting a user.'
     : 'No users match your search.';
   let chatUserListContent: ReactNode;
 
@@ -485,6 +521,9 @@ const Products = () => {
 
   return (
     <div>
+      {/* Toast Notifications */}
+      <toast.ToastContainer />
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
@@ -689,12 +728,13 @@ const Products = () => {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center justify-center gap-1">
-                            {product.status !== ProductStatus.COMPLETED && (
+                            {product.status !== ProductStatus.COMPLETED ? (
                               <>
                                 <Button 
                                   variant="ghost" 
                                   size="sm"
                                   onClick={() => handleEdit(product.id)}
+                                  title="Edit"
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -703,16 +743,28 @@ const Products = () => {
                                   size="sm"
                                   onClick={() => openSoldDialog(product.id, product.name)}
                                   className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
+                                  title="Mark as Completed"
                                 >
                                   <CheckCircle className="h-4 w-4" />
                                 </Button>
                               </>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openReactivateDialog(product.id, product.name)}
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                disabled={isUpdatingStatus}
+                              >
+                                Reactivate
+                              </Button>
                             )}
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => openDeleteDialog(product.id, product.name)}
                               className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                              title="Delete"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -800,19 +852,20 @@ const Products = () => {
 
       {/* Mark as Completed Modal */}
       {statusModalState.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 relative">
-          <button
-            type="button"
-            aria-label="Close mark as completed dialog"
-            className="absolute inset-0 w-full h-full bg-black/50 transition-opacity"
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="fixed inset-0 bg-black/50 transition-opacity z-40"
             onClick={closeStatusModal}
+            aria-hidden="true"
           />
-          <div className="relative z-10 bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-xl w-full max-h-[80vh] overflow-hidden">
+          <div className="relative z-50 bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-xl w-full max-h-[80vh] overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Mark as Completed</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Select the user this item was completed with.
+                  {chatUsers.length > 0 
+                    ? 'Select the user this item was completed with (optional).'
+                    : 'No conversations found. You can still mark this item as completed.'}
                 </p>
               </div>
               <button
@@ -865,9 +918,8 @@ const Products = () => {
                 onClick={handleMarkCompleted}
                 disabled={
                   isUpdatingStatus ||
-                  !selectedChatUserId ||
-                  chatUsers.length === 0 ||
-                  Boolean(chatUsersError)
+                  Boolean(chatUsersError) ||
+                  (chatUsers.length > 0 && !selectedChatUserId)
                 }
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
@@ -878,7 +930,7 @@ const Products = () => {
         </div>
       )}
 
-      {/* Confirmation Dialog */}
+      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={dialogState.isOpen && dialogState.type === 'delete'}
         onClose={closeDialog}
@@ -888,6 +940,18 @@ const Products = () => {
         confirmText="Delete"
         cancelText="Cancel"
         variant="danger"
+      />
+
+      {/* Reactivate Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={dialogState.isOpen && dialogState.type === 'reactivate'}
+        onClose={closeDialog}
+        onConfirm={handleReactivate}
+        title="Reactivate Item"
+        message={`Are you sure you want to reactivate "${dialogState.productName}"? It will be listed as active again.`}
+        confirmText={isUpdatingStatus ? 'Reactivating...' : 'Reactivate'}
+        cancelText="Cancel"
+        variant="default"
       />
     </div>
   );

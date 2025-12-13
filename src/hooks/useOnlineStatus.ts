@@ -65,12 +65,15 @@ export const useOnlineStatus = () => {
       Object.keys(statusMap).forEach((key) => {
         const numKey = typeof key === 'string' ? Number.parseInt(key, 10) : Number(key);
         if (!isNaN(numKey)) {
-          normalizedMap[numKey] = Boolean(statusMap[key as any] ?? statusMap[numKey]);
+          // Use the original key to access the value (statusMap uses string keys from API)
+          normalizedMap[numKey] = Boolean(statusMap[key as keyof typeof statusMap]);
         }
       });
       
       if (Object.keys(normalizedMap).length > 0) {
-        console.log('[useOnlineStatus] Loaded online status for users:', Object.keys(normalizedMap));
+        console.log('[useOnlineStatus] Loaded online status for users:', Object.keys(normalizedMap), normalizedMap);
+      } else {
+        console.warn('[useOnlineStatus] No online status data received from API. Response:', resp);
       }
       setOnlineStatus(normalizedMap);
     } catch (error: any) {
@@ -84,22 +87,35 @@ export const useOnlineStatus = () => {
 
   // Listen for online status changes via WebSocket
   useEffect(() => {
-    if (!socket || !connected) return;
+    if (!socket || !connected) {
+      console.log('[useOnlineStatus] WebSocket not ready:', { socket: !!socket, connected });
+      return;
+    }
+
+    console.log('[useOnlineStatus] Listening for userOnlineStatusChanged events');
 
     const handleStatusChange = (data: { userId: number | string; isOnline: boolean; timestamp?: string }) => {
+      console.log('[useOnlineStatus] Received status change event:', data);
       const userId = typeof data.userId === 'string' ? Number.parseInt(data.userId, 10) : data.userId;
       
       if (!isNaN(userId)) {
-        setOnlineStatus((prev) => ({
-          ...prev,
-          [userId]: Boolean(data.isOnline),
-        }));
+        setOnlineStatus((prev) => {
+          const updated = {
+            ...prev,
+            [userId]: Boolean(data.isOnline),
+          };
+          console.log('[useOnlineStatus] Updated status map:', updated);
+          return updated;
+        });
+      } else {
+        console.warn('[useOnlineStatus] Invalid userId in status change event:', data);
       }
     };
 
     socket.on('userOnlineStatusChanged', handleStatusChange);
 
     return () => {
+      console.log('[useOnlineStatus] Cleaning up WebSocket listener');
       socket.off('userOnlineStatusChanged', handleStatusChange);
     };
   }, [socket, connected]);
