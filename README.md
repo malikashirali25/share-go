@@ -205,6 +205,12 @@ This project is for demonstration purposes. Please ensure you have the proper li
 4. Test thoroughly
 5. Submit a pull request
 
+## 👤 Author
+
+**Malik Ashir Ali**
+- GitHub: [@malikashirali25](https://github.com/malikashirali25)
+- Email: iammalikashirali@gmail.com
+
 ## 📞 Support
 
 For questions or support, please contact:
