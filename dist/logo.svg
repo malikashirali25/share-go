@@ -1,0 +1,31 @@
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="30" cy="30" r="28" fill="#3B82F6" opacity="0.1"/>
+  
+  <!-- Main sharing symbol - hands exchanging -->
+  <g transform="translate(15, 15)">
+    <!-- Left hand -->
+    <path d="M8 12 C8 8, 12 6, 16 8 C20 10, 22 14, 20 18 C18 22, 14 24, 10 22 C6 20, 4 16, 6 12 C8 8, 12 6, 16 8" 
+          fill="#3B82F6" stroke="#1E40AF" stroke-width="1.5"/>
+    
+    <!-- Right hand -->
+    <path d="M22 8 C26 6, 30 8, 32 12 C34 16, 32 20, 28 22 C24 24, 20 22, 18 18 C16 14, 18 10, 22 8" 
+          fill="#10B981" stroke="#059669" stroke-width="1.5"/>
+    
+    <!-- Exchange arrow -->
+    <path d="M16 15 L20 15 M18 13 L20 15 L18 17" 
+          stroke="#F59E0B" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="70" y="25" font-family="Inter, system-ui, sans-serif" font-size="18" font-weight="700" fill="#1F2937">
+    Share &amp; Go
+  </text>
+  
+  <!-- Tagline -->
+  <text x="70" y="42" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="400" fill="#6B7280">
+    Community Sharing Platform
+  </text>
+</svg>
+
+

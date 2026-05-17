@@ -20,7 +20,7 @@ export interface SearchableSelectProps {
 }
 
 const SearchableSelect = React.forwardRef<HTMLDivElement, SearchableSelectProps>(
-  ({ options, value, onChange, placeholder = "Select...", searchPlaceholder = "Search...", className, grouped = false }, ref) => {
+  ({ options, value, onChange, placeholder = "Select...", searchPlaceholder = "Search...", className, grouped = false }, _ref) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const containerRef = useRef<HTMLDivElement>(null);

@@ -8,16 +8,6 @@ interface Config {
     name: string;
     version: string;
   };
-  firebase: {
-    apiKey: string;
-    authDomain: string;
-    projectId: string;
-    storageBucket: string;
-    messagingSenderId: string;
-    appId: string;
-    measurementId?: string;
-    vapidKey: string;
-  };
 }
 
 const config: Config = {
@@ -28,16 +18,6 @@ const config: Config = {
   app: {
     name: import.meta.env.VITE_APP_NAME || 'Sharingo',
     version: import.meta.env.VITE_APP_VERSION || '1.0.0',
-  },
-  firebase: {
-    apiKey: (import.meta.env.VITE_FIREBASE_API_KEY || '').trim(),
-    authDomain: (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '').trim(),
-    projectId: (import.meta.env.VITE_FIREBASE_PROJECT_ID || '').trim(),
-    storageBucket: (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '').trim(),
-    messagingSenderId: (import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '').trim(),
-    appId: (import.meta.env.VITE_FIREBASE_APP_ID || '').trim(),
-    measurementId: (import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || undefined)?.trim(),
-    vapidKey: (import.meta.env.VITE_FIREBASE_VAPID_KEY || '').trim(),
   },
 };
 
